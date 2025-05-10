@@ -176,37 +176,6 @@ namespace GacWmsIntegration.Api.Controllers
             }
         }
 
-        // POST: api/salesorders/5/sync
-        [HttpPost("{id}/sync")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
-        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<IActionResult> SyncSalesOrder(int id)
-        {
-            try
-            {
-                // Check if sales order exists
-                if (!await _salesOrderService.SalesOrderExistsAsync(id))
-                {
-                    return NotFound($"Sales order with ID {id} not found");
-                }
-
-                var result = await _salesOrderService.SyncSalesOrderWithWmsAsync(id);
-                if (result)
-                {
-                    return Ok(new { message = $"Sales order with ID {id} synchronized successfully with WMS" });
-                }
-                else
-                {
-                    return StatusCode(StatusCodes.Status500InternalServerError, "Failed to synchronize sales order with WMS");
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error synchronizing sales order with ID: {OrderId}", id);
-                return StatusCode(StatusCodes.Status500InternalServerError, "Error synchronizing sales order");
-            }
-        }
 
         // GET: api/salesorders/5/items
         [HttpGet("{id}/items")]

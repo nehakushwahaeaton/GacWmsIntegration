@@ -12,7 +12,6 @@ namespace GacWmsIntegration.Core.Interfaces
         Task<bool> DeletePurchaseOrderAsync(int orderId);
         Task<bool> PurchaseOrderExistsAsync(int orderId);
         Task<bool> ValidatePurchaseOrderAsync(PurchaseOrder purchaseOrder);
-        Task<bool> SyncPurchaseOrderWithWmsAsync(int orderId);
 
         // Purchase Order Details methods
         Task<PurchaseOrderDetails> AddOrderItemAsync(int orderId, PurchaseOrderDetails item);

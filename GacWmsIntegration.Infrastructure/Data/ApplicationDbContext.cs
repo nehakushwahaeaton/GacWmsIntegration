@@ -1,6 +1,4 @@
-﻿using GacWmsIntegration.Core.Interfaces;
-using GacWmsIntegration.Core.Models;
-using GacWmsIntegration.Infrastructure.Repositories;
+﻿using GacWmsIntegration.Core.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 
@@ -24,9 +22,6 @@ namespace GacWmsIntegration.Infrastructure.Data
         public DbSet<SalesOrder> SalesOrders { get; set; } = null!;
         public DbSet<SalesOrderDetails> SalesOrderDetails { get; set; } = null!;
 
-        // Entity sets for synchronization tracking
-        public DbSet<SyncResultEntity> SyncResults { get; set; }
-        public DbSet<SyncStatusEntity> SyncStatuses { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -49,44 +44,6 @@ namespace GacWmsIntegration.Infrastructure.Data
 
             modelBuilder.Entity<SalesOrderDetails>()
                 .HasKey(sod => sod.OrderDetailID);
-
-            // Configure SyncResultEntity
-            modelBuilder.Entity<SyncResultEntity>()
-                .HasKey(e => e.Id);
-
-            modelBuilder.Entity<SyncResultEntity>()
-                .Property(e => e.EntityType)
-                .IsRequired()
-                .HasMaxLength(50);
-
-            modelBuilder.Entity<SyncResultEntity>()
-                .Property(e => e.EntityId)
-                .IsRequired()
-                .HasMaxLength(50);
-
-            // Configure SyncStatusEntity
-            modelBuilder.Entity<SyncStatusEntity>()
-                .HasKey(e => e.Id);
-
-            modelBuilder.Entity<SyncStatusEntity>()
-                .Property(e => e.EntityType)
-                .IsRequired()
-                .HasMaxLength(50);
-
-            modelBuilder.Entity<SyncStatusEntity>()
-                .Property(e => e.EntityId)
-                .IsRequired()
-                .HasMaxLength(50);
-
-            modelBuilder.Entity<SyncStatusEntity>()
-                .Property(e => e.Status)
-                .IsRequired()
-                .HasMaxLength(20);
-
-            // Create a unique index on EntityType and EntityId for SyncStatusEntity
-            modelBuilder.Entity<SyncStatusEntity>()
-                .HasIndex(e => new { e.EntityType, e.EntityId })
-                .IsUnique();
         }
 
         public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)

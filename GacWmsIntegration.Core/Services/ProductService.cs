@@ -8,16 +8,13 @@ namespace GacWmsIntegration.Core.Services
     public class ProductService : IProductService
     {
         private readonly IApplicationDbContext _dbContext;
-        private readonly IWmsApiClient _wmsApiClient;
         private readonly ILogger<ProductService> _logger;
 
         public ProductService(
             IApplicationDbContext dbContext,
-            IWmsApiClient wmsApiClient,
             ILogger<ProductService> logger)
         {
             _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
-            _wmsApiClient = wmsApiClient ?? throw new ArgumentNullException(nameof(wmsApiClient));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
@@ -51,7 +48,7 @@ namespace GacWmsIntegration.Core.Services
                 if (product == null)
                 {
                     _logger.LogWarning("Product with code: {ProductCode} not found", productCode);
-                    throw new KeyNotFoundException($"Product with code {productCode} not found");
+                    return null!;
                 }
 
                 return product;
@@ -89,9 +86,6 @@ namespace GacWmsIntegration.Core.Services
                 await _dbContext.SaveChangesAsync();
 
                 _logger.LogInformation("Product created successfully with code: {ProductCode}", product.ProductCode);
-
-                // Synchronize with WMS
-                await SyncProductWithWmsAsync(product.ProductCode);
 
                 return product;
             }
@@ -141,9 +135,6 @@ namespace GacWmsIntegration.Core.Services
                 await _dbContext.SaveChangesAsync();
 
                 _logger.LogInformation("Product updated successfully with code: {ProductCode}", product.ProductCode);
-
-                // Synchronize with WMS
-                await SyncProductWithWmsAsync(product.ProductCode);
 
                 return existingProduct;
             }
@@ -254,37 +245,5 @@ namespace GacWmsIntegration.Core.Services
             }
         }
 
-        public async Task<bool> SyncProductWithWmsAsync(string productCode)
-        {
-            if (string.IsNullOrEmpty(productCode))
-            {
-                throw new ArgumentException("Product code cannot be null or empty", nameof(productCode));
-            }
-
-            try
-            {
-                // Get product from database
-                var product = await GetProductByCodeAsync(productCode);
-
-                // Send product to WMS
-                bool result = await _wmsApiClient.SendProductAsync(product);
-
-                if (result)
-                {
-                    _logger.LogInformation("Product synchronized successfully with WMS. Product code: {ProductCode}", productCode);
-                }
-                else
-                {
-                    _logger.LogWarning("Failed to synchronize product with WMS. Product code: {ProductCode}", productCode);
-                }
-
-                return result;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error synchronizing product with WMS. Product code: {ProductCode}", productCode);
-                return false;
-            }
-        }
     }
 }

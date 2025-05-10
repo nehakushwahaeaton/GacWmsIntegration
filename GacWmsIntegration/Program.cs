@@ -28,8 +28,6 @@
 using GacWmsIntegration.Core.Interfaces;
 using GacWmsIntegration.Core.Services;
 using GacWmsIntegration.Infrastructure.Data;
-using GacWmsIntegration.Infrastructure.Repositories;
-using GacWmsIntegration.Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi.Models;
 using Serilog;
@@ -64,23 +62,12 @@ builder.Services.AddDbContext<ApplicationDbContext>(options =>
 // Register IApplicationDbContext
 builder.Services.AddScoped<IApplicationDbContext>(provider => provider.GetService<ApplicationDbContext>());
 
-// Register repositories
-builder.Services.AddScoped<ISyncRepository, SyncRepository>();
 
 // Add Core Services
 builder.Services.AddScoped<ICustomerService, CustomerService>();
 builder.Services.AddScoped<IProductService, ProductService>();
 builder.Services.AddScoped<IPurchaseOrderService, PurchaseOrderService>();
 builder.Services.AddScoped<ISalesOrderService, SalesOrderService>();
-
-// Add Infrastructure Services
-builder.Services.AddScoped<IWmsService, WmsService>();
-builder.Services.AddHttpClient<IWmsApiClient, WmsApiClient>(client =>
-{
-    client.BaseAddress = new Uri(builder.Configuration["WmsApi:BaseUrl"]);
-    client.Timeout = TimeSpan.FromSeconds(builder.Configuration.GetValue<int>("WmsApi:Timeout", 30));
-    client.DefaultRequestHeaders.Add("X-API-Key", builder.Configuration["WmsApi:ApiKey"]);
-});
 
 // Add caching
 builder.Services.AddResponseCaching();

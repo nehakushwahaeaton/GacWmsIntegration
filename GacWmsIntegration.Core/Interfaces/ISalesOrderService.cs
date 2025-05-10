@@ -12,7 +12,6 @@ namespace GacWmsIntegration.Core.Interfaces
         Task<bool> DeleteSalesOrderAsync(int orderId);
         Task<bool> SalesOrderExistsAsync(int orderId);
         Task<bool> ValidateSalesOrderAsync(SalesOrder salesOrder);
-        Task<bool> SyncSalesOrderWithWmsAsync(int orderId);
 
         // Sales Order Details methods
         Task<SalesOrderDetails> AddOrderItemAsync(int orderId, SalesOrderDetails item);

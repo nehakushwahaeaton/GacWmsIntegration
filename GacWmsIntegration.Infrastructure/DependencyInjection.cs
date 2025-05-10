@@ -1,7 +1,4 @@
-﻿using GacWmsIntegration.Core.Interfaces;
-using GacWmsIntegration.Infrastructure.Data;
-using GacWmsIntegration.Infrastructure.Repositories;
-using GacWmsIntegration.Infrastructure.Services;
+﻿using GacWmsIntegration.Infrastructure.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -24,18 +21,6 @@ namespace GacWmsIntegration.Infrastructure
 
             // Register IApplicationDbContext
             services.AddScoped<IApplicationDbContext>(provider => provider.GetRequiredService<ApplicationDbContext>());
-
-            // Register repositories
-            services.AddScoped<ISyncRepository, SyncRepository>();
-
-            // Register services
-            services.AddScoped<IWmsService, WmsService>();
-            services.AddHttpClient<IWmsApiClient, WmsApiClient>(client =>
-            {
-                client.BaseAddress = new Uri(configuration["WmsApi:BaseUrl"]);
-                client.Timeout = TimeSpan.FromSeconds(configuration.GetValue<int>("WmsApi:Timeout", 30));
-                client.DefaultRequestHeaders.Add("X-API-Key", configuration["WmsApi:ApiKey"]);
-            });
 
             return services;
         }

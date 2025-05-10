@@ -177,36 +177,6 @@ namespace GacWmsIntegration.Api.Controllers
         }
 
         // POST: api/purchaseorders/5/sync
-        [HttpPost("{id}/sync")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
-        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<IActionResult> SyncPurchaseOrder(int id)
-        {
-            try
-            {
-                // Check if purchase order exists
-                if (!await _purchaseOrderService.PurchaseOrderExistsAsync(id))
-                {
-                    return NotFound($"Purchase order with ID {id} not found");
-                }
-
-                var result = await _purchaseOrderService.SyncPurchaseOrderWithWmsAsync(id);
-                if (result)
-                {
-                    return Ok(new { message = $"Purchase order with ID {id} synchronized successfully with WMS" });
-                }
-                else
-                {
-                    return StatusCode(StatusCodes.Status500InternalServerError, "Failed to synchronize purchase order with WMS");
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error synchronizing purchase order with ID: {OrderId}", id);
-                return StatusCode(StatusCodes.Status500InternalServerError, "Error synchronizing purchase order");
-            }
-        }
 
         // GET: api/purchaseorders/5/items
         [HttpGet("{id}/items")]

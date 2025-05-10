@@ -152,37 +152,6 @@ namespace GacWmsIntegration.Api.Controllers
                 return StatusCode(StatusCodes.Status500InternalServerError, "Error deleting customer");
             }
         }
-
-        // POST: api/customers/5/sync
-        [HttpPost("{id}/sync")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
-        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<IActionResult> SyncCustomer(int id)
-        {
-            try
-            {
-                // Check if customer exists
-                if (!await _customerService.CustomerExistsAsync(id))
-                {
-                    return NotFound($"Customer with ID {id} not found");
-                }
-
-                var result = await _customerService.SyncCustomerWithWmsAsync(id);
-                if (result)
-                {
-                    return Ok(new { message = $"Customer with ID {id} synchronized successfully with WMS" });
-                }
-                else
-                {
-                    return StatusCode(StatusCodes.Status500InternalServerError, "Failed to synchronize customer with WMS");
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error synchronizing customer with ID: {CustomerId}", id);
-                return StatusCode(StatusCodes.Status500InternalServerError, "Error synchronizing customer");
-            }
-        }
+        
     }
 }

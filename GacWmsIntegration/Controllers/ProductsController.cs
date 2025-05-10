@@ -158,36 +158,5 @@ namespace GacWmsIntegration.Api.Controllers
             }
         }
 
-        // POST: api/products/ABC123/sync
-        [HttpPost("{code}/sync")]
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status404NotFound)]
-        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        public async Task<IActionResult> SyncProduct(string code)
-        {
-            try
-            {
-                // Check if product exists
-                if (!await _productService.ProductExistsAsync(code))
-                {
-                    return NotFound($"Product with code {code} not found");
-                }
-
-                var result = await _productService.SyncProductWithWmsAsync(code);
-                if (result)
-                {
-                    return Ok(new { message = $"Product with code {code} synchronized successfully with WMS" });
-                }
-                else
-                {
-                    return StatusCode(StatusCodes.Status500InternalServerError, "Failed to synchronize product with WMS");
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error synchronizing product with code: {ProductCode}", code);
-                return StatusCode(StatusCodes.Status500InternalServerError, "Error synchronizing product");
-            }
-        }
     }
 }

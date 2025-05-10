@@ -2,26 +2,19 @@
 using GacWmsIntegration.Core.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace GacWmsIntegration.Core.Services
 {
     public class SalesOrderService : ISalesOrderService
     {
         private readonly IApplicationDbContext _dbContext;
-        private readonly IWmsApiClient _wmsApiClient;
         private readonly ILogger<SalesOrderService> _logger;
 
         public SalesOrderService(
             IApplicationDbContext dbContext,
-            IWmsApiClient wmsApiClient,
             ILogger<SalesOrderService> logger)
         {
             _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
-            _wmsApiClient = wmsApiClient ?? throw new ArgumentNullException(nameof(wmsApiClient));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
@@ -122,9 +115,6 @@ namespace GacWmsIntegration.Core.Services
 
                 _logger.LogInformation("Sales order created successfully with ID: {OrderId}", salesOrder.OrderID);
 
-                // Synchronize with WMS
-                await SyncSalesOrderWithWmsAsync(salesOrder.OrderID);
-
                 return salesOrder;
             }
             catch (Exception ex)
@@ -173,9 +163,6 @@ namespace GacWmsIntegration.Core.Services
                 await _dbContext.SaveChangesAsync();
 
                 _logger.LogInformation("Sales order updated successfully with ID: {OrderId}", salesOrder.OrderID);
-
-                // Synchronize with WMS
-                await SyncSalesOrderWithWmsAsync(salesOrder.OrderID);
 
                 return existingOrder;
             }
@@ -287,34 +274,6 @@ namespace GacWmsIntegration.Core.Services
             }
         }
 
-        public async Task<bool> SyncSalesOrderWithWmsAsync(int orderId)
-        {
-            try
-            {
-                // Get sales order from database with all related data
-                var salesOrder = await GetSalesOrderByIdAsync(orderId);
-
-                // Send sales order to WMS
-                bool result = await _wmsApiClient.SendSalesOrderAsync(salesOrder);
-
-                if (result)
-                {
-                    _logger.LogInformation("Sales order synchronized successfully with WMS. Order ID: {OrderId}", orderId);
-                }
-                else
-                {
-                    _logger.LogWarning("Failed to synchronize sales order with WMS. Order ID: {OrderId}", orderId);
-                }
-
-                return result;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error synchronizing sales order with WMS. Order ID: {OrderId}", orderId);
-                return false;
-            }
-        }
-
         public async Task<SalesOrderDetails> AddOrderItemAsync(int orderId, SalesOrderDetails item)
         {
             if (item == null)
@@ -350,9 +309,6 @@ namespace GacWmsIntegration.Core.Services
 
                 _logger.LogInformation("Order item added successfully to sales order ID: {OrderId}", orderId);
 
-                // Synchronize updated order with WMS
-                await SyncSalesOrderWithWmsAsync(orderId);
-
                 return item;
             }
             catch (Exception ex) when (!(ex is KeyNotFoundException))
@@ -383,9 +339,6 @@ namespace GacWmsIntegration.Core.Services
 
                 _logger.LogInformation("Order item removed successfully with ID: {OrderDetailId}", orderDetailId);
 
-                // Synchronize updated order with WMS
-                await SyncSalesOrderWithWmsAsync(orderId);
-
                 return true;
             }
             catch (Exception ex)
@@ -406,7 +359,7 @@ namespace GacWmsIntegration.Core.Services
                 if (!orderExists)
                 {
                     _logger.LogWarning("Sales order with ID: {OrderId} not found", orderId);
-                    throw new KeyNotFoundException($"Sales order with ID {orderId} not found");
+                    return null!;
                 }
 
                 return await _dbContext.SalesOrderDetails

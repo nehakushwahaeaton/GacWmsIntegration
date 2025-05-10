@@ -11,6 +11,5 @@ namespace GacWmsIntegration.Core.Interfaces
         Task<bool> DeleteProductAsync(string productCode);
         Task<bool> ProductExistsAsync(string productCode);
         Task<bool> ValidateProductAsync(Product product);
-        Task<bool> SyncProductWithWmsAsync(string productCode);
     }
 }

@@ -1,359 +1,225 @@
 ﻿using GacWmsIntegration.Core.Interfaces;
+using GacWmsIntegration.Core.Models;
 using GacWmsIntegration.FileProcessor.Models;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Polly.Retry;
+using Polly;
+using System.Diagnostics;
+using System.Xml.Linq;
 
 namespace GacWmsIntegration.FileProcessor.Services
 {
     /// <summary>
     /// Service for processing files according to configured patterns
     /// </summary>
-    public class FileProcessingService : IDisposable
+    public class FileProcessingService
     {
         private readonly ILogger<FileProcessingService> _logger;
         private readonly FileProcessingConfig _config;
+        private readonly XmlParserService _xmlParser;
+        private readonly ICustomerService _customerService;
+        private readonly IProductService _productService;
         private readonly IPurchaseOrderService _purchaseOrderService;
         private readonly ISalesOrderService _salesOrderService;
-        private readonly IProductService _productService;
-        private readonly ICustomerService _customerService;
-        private readonly Dictionary<string, int> _processingRetries = new Dictionary<string, int>();
-        private readonly SemaphoreSlim _processingSemaphore = new SemaphoreSlim(1, 1);
-        private bool _disposed = false;
+        private readonly Dictionary<FileType, AsyncRetryPolicy> _retryPolicies = new();
 
         public FileProcessingService(
-            IOptions<FileProcessingConfig> config,
             ILogger<FileProcessingService> logger,
-            IPurchaseOrderService purchaseOrderService,
-            ISalesOrderService salesOrderService,
+            IOptions<FileProcessingConfig> config,
+            XmlParserService xmlParser,
+            ICustomerService customerService,
             IProductService productService,
-            ICustomerService customerService)
+            IPurchaseOrderService purchaseOrderService,
+            ISalesOrderService salesOrderService)
         {
-            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            _config = config?.Value ?? throw new ArgumentNullException(nameof(config));
-            _purchaseOrderService = purchaseOrderService ?? throw new ArgumentNullException(nameof(purchaseOrderService));
-            _salesOrderService = salesOrderService ?? throw new ArgumentNullException(nameof(salesOrderService));
-            _productService = productService ?? throw new ArgumentNullException(nameof(productService));
-            _customerService = customerService ?? throw new ArgumentNullException(nameof(customerService));
+            _logger = logger;
+            _config = config.Value;
+            _xmlParser = xmlParser;
+            _customerService = customerService;
+            _productService = productService;
+            _purchaseOrderService = purchaseOrderService;
+            _salesOrderService = salesOrderService;
 
-            // Ensure directories exist
-            EnsureDirectoriesExist();
+            // Initialize retry policies for each file type
+            foreach (var fileWatcher in _config.FileWatchers)
+            {
+                _retryPolicies[fileWatcher.FileType] = Policy
+                    .Handle<Exception>()
+                    .WaitAndRetryAsync(
+                        fileWatcher.MaxRetryAttempts,
+                        retryAttempt => TimeSpan.FromSeconds(Math.Pow(2, retryAttempt)),
+                        (exception, timeSpan, retryCount, context) =>
+                        {
+                            _logger.LogWarning(exception,
+                                "Error processing file {FileName}. Retry attempt {RetryCount} after {RetryTimeSpan}s",
+                                context["fileName"], retryCount, timeSpan.TotalSeconds);
+                        });
+            }
         }
 
-        ///// <summary>
-        ///// Process all files matching the configured patterns
-        ///// </summary>
-        //public async Task ProcessFilesAsync(CancellationToken cancellationToken = default)
-        //{
-        //    try
-        //    {
-        //        await _processingSemaphore.WaitAsync(cancellationToken);
-
-        //        _logger.LogInformation("Starting file processing cycle");
-
-        //        foreach (var patternConfig in _config.FilePatterns.Where(p => p.IsEnabled))
-        //        {
-        //            if (cancellationToken.IsCancellationRequested)
-        //            {
-        //                _logger.LogInformation("File processing cancelled");
-        //                break;
-        //            }
-
-        //            try
-        //            {
-        //                await ProcessFilePatternAsync(patternConfig, cancellationToken);
-        //            }
-        //            catch (Exception ex)
-        //            {
-        //                _logger.LogError(ex, "Error processing file pattern {PatternName}: {ErrorMessage}",
-        //                    patternConfig.Name, ex.Message);
-        //            }
-        //        }
-
-        //        _logger.LogInformation("Completed file processing cycle");
-        //    }
-        //    catch (OperationCanceledException)
-        //    {
-        //        _logger.LogInformation("File processing operation was cancelled");
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        _logger.LogError(ex, "Unexpected error during file processing: {ErrorMessage}", ex.Message);
-        //    }
-        //    finally
-        //    {
-        //        if (_processingSemaphore.CurrentCount == 0)
-        //        {
-        //            _processingSemaphore.Release();
-        //        }
-        //    }
-        //}
-
-        ///// <summary>
-        ///// Process files matching a specific pattern configuration
-        ///// </summary>
-        //private async Task ProcessFilePatternAsync(FilePatternConfig patternConfig, CancellationToken cancellationToken)
-        //{
-        //    var inputDir = Path.Combine(_config.BaseDirectory, _config.InputDirectory);
-        //    var files = Directory.GetFiles(inputDir, patternConfig.Pattern);
-
-        //    _logger.LogInformation("Found {FileCount} files matching pattern {Pattern}",
-        //        files.Length, patternConfig.Pattern);
-
-        //    foreach (var filePath in files)
-        //    {
-        //        if (cancellationToken.IsCancellationRequested)
-        //        {
-        //            break;
-        //        }
-
-        //        var fileName = Path.GetFileName(filePath);
-        //        _logger.LogInformation("Processing file: {FileName}", fileName);
-
-        //        try
-        //        {
-        //            // Create backup if configured
-        //            if (_config.CreateBackup)
-        //            {
-        //                await CreateBackupAsync(filePath);
-        //            }
-
-        //            // Process the file based on its type
-        //            var success = await ProcessFileByTypeAsync(filePath, patternConfig);
-
-        //            if (success)
-        //            {
-        //                _logger.LogInformation("Successfully processed file: {FileName}", fileName);
-
-        //                // Remove from retry tracking if it was there
-        //                _processingRetries.Remove(filePath);
-
-        //                // Handle the processed file
-        //                await HandleProcessedFileAsync(filePath);
-        //            }
-        //            else
-        //            {
-        //                _logger.LogWarning("Failed to process file: {FileName}", fileName);
-
-        //                // Track retry count
-        //                if (!_processingRetries.ContainsKey(filePath))
-        //                {
-        //                    _processingRetries[filePath] = 1;
-        //                }
-        //                else
-        //                {
-        //                    _processingRetries[filePath]++;
-        //                }
-
-        //                // Check if max retries reached
-        //                if (_processingRetries[filePath] > _config.MaxRetries)
-        //                {
-        //                    _logger.LogError("Max retries reached for file: {FileName}", fileName);
-        //                    await MoveToErrorDirectoryAsync(filePath);
-        //                    _processingRetries.Remove(filePath);
-        //                }
-        //            }
-        //        }
-        //        catch (Exception ex)
-        //        {
-        //            _logger.LogError(ex, "Error processing file {FileName}: {ErrorMessage}",
-        //                fileName, ex.Message);
-
-        //            await MoveToErrorDirectoryAsync(filePath);
-        //        }
-        //    }
-        //}
-
-        ///// <summary>
-        ///// Process a file based on its type
-        ///// </summary>
-        //private async Task<bool> ProcessFileByTypeAsync(string filePath, FilePatternConfig patternConfig)
-        //{
-        //    switch (patternConfig.FileType.ToLowerInvariant())
-        //    {
-        //        case "purchaseorder":
-        //            return await _purchaseOrderService.ProcessPurchaseOrderFileAsync(filePath);
-
-        //        case "salesorder":
-        //            return await _salesOrderService.ProcessSalesOrderFileAsync(filePath);
-
-        //        case "product":
-        //            return await _productService.ProcessProductFileAsync(filePath);
-
-        //        case "customer":
-        //            return await _customerService.ProcessCustomerFileAsync(filePath);
-
-        //        default:
-        //            _logger.LogWarning("Unknown file type: {FileType}", patternConfig.FileType);
-        //            return false;
-        //    }
-        //}
-
-        /// <summary>
-        /// Create a backup of a file
-        /// </summary>
-        private async Task CreateBackupAsync(string filePath)
+        public async Task ProcessFilesAsync(FileWatcherConfig watcherConfig, CancellationToken cancellationToken)
         {
-            var backupDir = Path.Combine(_config.BaseDirectory, _config.BackupDirectory);
-            var fileName = Path.GetFileName(filePath);
-            var timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
-            var backupFileName = $"{Path.GetFileNameWithoutExtension(fileName)}_{timestamp}{Path.GetExtension(fileName)}";
-            var backupPath = Path.Combine(backupDir, backupFileName);
-
             try
             {
-                using (var sourceStream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read))
-                using (var destinationStream = new FileStream(backupPath, FileMode.Create, FileAccess.Write, FileShare.None))
+                _logger.LogInformation("Starting file processing for {WatcherName}", watcherConfig.Name);
+
+                var directory = new DirectoryInfo(watcherConfig.DirectoryPath);
+                if (!directory.Exists)
                 {
-                    await sourceStream.CopyToAsync(destinationStream);
+                    _logger.LogWarning("Directory {DirectoryPath} does not exist", watcherConfig.DirectoryPath);
+                    return;
                 }
 
-                _logger.LogInformation("Created backup of file {FileName} at {BackupPath}", fileName, backupPath);
+                var files = directory.GetFiles(watcherConfig.FilePattern);
+                _logger.LogInformation("Found {FileCount} files to process", files.Length);
+
+                foreach (var file in files)
+                {
+                    if (cancellationToken.IsCancellationRequested)
+                        break;
+
+                    var context = new Context
+                    {
+                        ["fileName"] = file.Name,
+                        ["fileType"] = watcherConfig.FileType
+                    };
+
+                    await _retryPolicies[watcherConfig.FileType].ExecuteAsync(async (ctx, ct) =>
+                    {
+                        await ProcessFileAsync(file.FullName, watcherConfig.FileType);
+
+                        // Archive the file if configured
+                        if (watcherConfig.ArchiveProcessedFiles && !string.IsNullOrEmpty(watcherConfig.ArchivePath))
+                        {
+                            ArchiveFile(file, watcherConfig.ArchivePath);
+                        }
+                        else
+                        {
+                            // Delete the file if not archiving
+                            file.Delete();
+                            _logger.LogInformation("Deleted processed file {FileName}", file.Name);
+                        }
+                    }, context, cancellationToken);
+                }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to create backup of file {FileName}: {ErrorMessage}",
-                    fileName, ex.Message);
-                throw;
+                _logger.LogError(ex, "Error processing files for {WatcherName}", watcherConfig.Name);
             }
         }
 
-        /// <summary>
-        /// Handle a successfully processed file
-        /// </summary>
-        private async Task HandleProcessedFileAsync(string filePath)
+        private async Task ProcessFileAsync(string filePath, FileType fileType)
         {
-            if (_config.DeleteProcessedFiles)
+            _logger.LogInformation("Processing file {FilePath} of type {FileType}", filePath, fileType);
+
+            switch (fileType)
             {
+                case FileType.Customer:
+                    var customers = _xmlParser.ParseCustomers(filePath);
+                    foreach (var customer in customers)
+                    {
+                        var existingCustomer = await _customerService.GetCustomerByIdAsync(customer.CustomerID);
+                        if (existingCustomer != null)
+                        {
+                            await _customerService.UpdateCustomerAsync(customer);
+                        }
+                        else
+                        {
+                            _logger.LogWarning("Customer with ID: {CustomerId} not found. Creating new customer.", customer.CustomerID);
+                            await _customerService.CreateCustomerAsync(customer);
+                        }
+
+                    }
+                    _logger.LogInformation("Processed {Count} customers from {FilePath}", customers.Count, filePath);
+                    break;
+
+                case FileType.Product:
+                    var products = _xmlParser.ParseProducts(filePath);
+                    foreach (var product in products)
+                    {
+                        var existingProduct = await _productService.GetProductByCodeAsync(product.ProductCode);
+                        if (existingProduct != null)
+                        {
+                            await _productService.UpdateProductAsync(product);
+                        }
+                        else
+                        {
+                            await _productService.CreateProductAsync(product);
+                        }
+                    }
+                    _logger.LogInformation("Processed {Count} products from {FilePath}", products.Count, filePath);
+                    break;
+
+                case FileType.PurchaseOrder:
+                    var purchaseOrders = _xmlParser.ParsePurchaseOrders(filePath);
+                    foreach (var order in purchaseOrders)
+                    {
+                        var existingOrder = await _purchaseOrderService.GetPurchaseOrderByIdAsync(order.OrderID);
+                        if (existingOrder != null)
+                        {
+                            await _purchaseOrderService.UpdatePurchaseOrderAsync(order);
+                        }
+                        else
+                        {
+                            await _purchaseOrderService.CreatePurchaseOrderAsync(order);
+                        }
+                        await _purchaseOrderService.CreatePurchaseOrderAsync(order);
+                    }
+                    _logger.LogInformation("Processed {Count} purchase orders from {FilePath}", purchaseOrders.Count, filePath);
+                    break;
+
+                case FileType.SalesOrder:
+                    var salesOrders = _xmlParser.ParseSalesOrders(filePath);
+                    foreach (var order in salesOrders)
+                    {
+                        var existingOrder = await _salesOrderService.GetOrderItemsAsync(order.OrderID);
+                        if (existingOrder != null)
+                        {
+                            await _salesOrderService.UpdateSalesOrderAsync(order);
+                        }
+                        else
+                        {
+                            await _salesOrderService.CreateSalesOrderAsync(order);
+                        }
+                    }
+                    _logger.LogInformation("Processed {Count} sales orders from {FilePath}", salesOrders.Count, filePath);
+                    break;
+
+                default:
+                    _logger.LogWarning("Unknown file type {FileType} for {FilePath}", fileType, filePath);
+                    break;
+            }
+        }
+        private void ArchiveFile(FileInfo file, string archivePath)
+        {
+            try
+            {
+                Directory.CreateDirectory(archivePath);
+
+                var archiveFilePath = Path.Combine(
+                    archivePath,
+                    $"{Path.GetFileNameWithoutExtension(file.Name)}_{DateTime.Now:yyyyMMdd_HHmmss}{file.Extension}");
+
+                file.MoveTo(archiveFilePath);
+                _logger.LogInformation("Archived file {FileName} to {ArchiveFilePath}", file.Name, archiveFilePath);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error archiving file {FileName} to {ArchivePath}", file.Name, archivePath);
+                // Still try to delete the original file to prevent reprocessing
                 try
                 {
-                    File.Delete(filePath);
-                    _logger.LogInformation("Deleted processed file: {FilePath}", filePath);
+                    file.Delete();
+                    _logger.LogInformation("Deleted file {FileName} after failed archive attempt", file.Name);
                 }
-                catch (Exception ex)
+                catch (Exception deleteEx)
                 {
-                    _logger.LogError(ex, "Failed to delete processed file {FilePath}: {ErrorMessage}",
-                        filePath, ex.Message);
+                    _logger.LogError(deleteEx, "Failed to delete file {FileName} after failed archive attempt", file.Name);
                 }
-            }
-            else if (_config.MoveProcessedFiles)
-            {
-                await MoveToProcessedDirectoryAsync(filePath);
-            }
-        }
-
-        /// <summary>
-        /// Move a file to the processed directory
-        /// </summary>
-        private async Task MoveToProcessedDirectoryAsync(string filePath)
-        {
-            var processedDir = Path.Combine(_config.BaseDirectory, _config.ProcessedDirectory);
-            var fileName = Path.GetFileName(filePath);
-            var timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
-            var processedFileName = $"{Path.GetFileNameWithoutExtension(fileName)}_{timestamp}{Path.GetExtension(fileName)}";
-            var processedPath = Path.Combine(processedDir, processedFileName);
-
-            try
-            {
-                // Use File.Copy and then delete to avoid issues with locked files
-                using (var sourceStream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read))
-                using (var destinationStream = new FileStream(processedPath, FileMode.Create, FileAccess.Write, FileShare.None))
-                {
-                    await sourceStream.CopyToAsync(destinationStream);
-                }
-
-                File.Delete(filePath);
-
-                _logger.LogInformation("Moved processed file {FileName} to {ProcessedPath}", fileName, processedPath);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Failed to move processed file {FileName} to processed directory: {ErrorMessage}",
-                    fileName, ex.Message);
-            }
-        }
-
-        /// <summary>
-        /// Move a file to the error directory
-        /// </summary>
-        private async Task MoveToErrorDirectoryAsync(string filePath)
-        {
-            if (!_config.MoveErrorFiles)
-            {
-                return;
-            }
-
-            var errorDir = Path.Combine(_config.BaseDirectory, _config.ErrorDirectory);
-            var fileName = Path.GetFileName(filePath);
-            var timestamp = DateTime.Now.ToString("yyyyMMdd_HHmmss");
-            var errorFileName = $"{Path.GetFileNameWithoutExtension(fileName)}_{timestamp}{Path.GetExtension(fileName)}";
-            var errorPath = Path.Combine(errorDir, errorFileName);
-
-            try
-            {
-                // Use File.Copy and then delete to avoid issues with locked files
-                using (var sourceStream = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.Read))
-                using (var destinationStream = new FileStream(errorPath, FileMode.Create, FileAccess.Write, FileShare.None))
-                {
-                    await sourceStream.CopyToAsync(destinationStream);
-                }
-
-                File.Delete(filePath);
-
-                _logger.LogInformation("Moved error file {FileName} to {ErrorPath}", fileName, errorPath);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Failed to move error file {FileName} to error directory: {ErrorMessage}",
-                    fileName, ex.Message);
-            }
-        }
-        /// <summary>
-        /// Ensure all required directories exist
-        /// </summary>
-        private void EnsureDirectoriesExist()
-        {
-            try
-            {
-                var baseDir = _config.BaseDirectory;
-
-                Directory.CreateDirectory(Path.Combine(baseDir, _config.InputDirectory));
-                Directory.CreateDirectory(Path.Combine(baseDir, _config.ProcessedDirectory));
-                Directory.CreateDirectory(Path.Combine(baseDir, _config.ErrorDirectory));
-                Directory.CreateDirectory(Path.Combine(baseDir, _config.BackupDirectory));
-
-                _logger.LogInformation("Ensured all required directories exist");
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Failed to create required directories: {ErrorMessage}", ex.Message);
-                throw;
-            }
-        }
-
-        /// <summary>
-        /// Dispose resources
-        /// </summary>
-        public void Dispose()
-        {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-
-        /// <summary>
-        /// Dispose pattern implementation
-        /// </summary>
-        protected virtual void Dispose(bool disposing)
-        {
-            if (!_disposed)
-            {
-                if (disposing)
-                {
-                    _processingSemaphore?.Dispose();
-                }
-
-                _disposed = true;
             }
         }
     }
-
 }
+

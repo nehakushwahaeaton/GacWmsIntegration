@@ -11,6 +11,5 @@ namespace GacWmsIntegration.Core.Interfaces
         Task<bool> DeleteCustomerAsync(int customerId);
         Task<bool> CustomerExistsAsync(int customerId);
         Task<bool> ValidateCustomerAsync(Customer customer);
-        Task<bool> SyncCustomerWithWmsAsync(int customerId);
     }
 }

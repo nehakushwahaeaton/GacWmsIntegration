@@ -9,16 +9,13 @@ namespace GacWmsIntegration.Core.Services
     public class CustomerService : ICustomerService
     {
         private readonly IApplicationDbContext _dbContext;
-        private readonly IWmsApiClient _wmsApiClient;
         private readonly ILogger<CustomerService> _logger;
 
         public CustomerService(
             IApplicationDbContext dbContext,
-            IWmsApiClient wmsApiClient,
             ILogger<CustomerService> logger)
         {
             _dbContext = dbContext ?? throw new ArgumentNullException(nameof(dbContext));
-            _wmsApiClient = wmsApiClient ?? throw new ArgumentNullException(nameof(wmsApiClient));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
@@ -46,7 +43,7 @@ namespace GacWmsIntegration.Core.Services
                 if (customer == null)
                 {
                     _logger.LogWarning("Customer with ID: {CustomerId} not found", customerId);
-                    throw new KeyNotFoundException($"Customer with ID {customerId} not found");
+                    return null!;
                 }
 
                 return customer;
@@ -84,9 +81,6 @@ namespace GacWmsIntegration.Core.Services
                 await _dbContext.SaveChangesAsync();
 
                 _logger.LogInformation("Customer created successfully with ID: {CustomerId}", customer.CustomerID);
-
-                // Synchronize with WMS
-                await SyncCustomerWithWmsAsync(customer.CustomerID);
 
                 return customer;
             }
@@ -131,9 +125,6 @@ namespace GacWmsIntegration.Core.Services
                 await _dbContext.SaveChangesAsync();
 
                 _logger.LogInformation("Customer updated successfully with ID: {CustomerId}", customer.CustomerID);
-
-                // Synchronize with WMS
-                await SyncCustomerWithWmsAsync(customer.CustomerID);
 
                 return customer;
             }
@@ -233,219 +224,5 @@ namespace GacWmsIntegration.Core.Services
                 throw;
             }
         }
-
-        public async Task<bool> SyncCustomerWithWmsAsync(int customerId)
-        {
-            try
-            {
-                // Get customer from database
-                var customer = await GetCustomerByIdAsync(customerId);
-
-                // Send customer to WMS
-                bool result = await _wmsApiClient.SendCustomerAsync(customer);
-
-                if (result)
-                {
-                    _logger.LogInformation("Customer synchronized successfully with WMS. Customer ID: {CustomerId}", customerId);
-                }
-                else
-                {
-                    _logger.LogWarning("Failed to synchronize customer with WMS. Customer ID: {CustomerId}", customerId);
-                }
-
-                return result;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error synchronizing customer with WMS. Customer ID: {CustomerId}", customerId);
-                return false;
-            }
-        }
-
-        //public async Task<bool> ProcessCustomerFileAsync(string filePath)
-        //{
-        //    if (string.IsNullOrEmpty(filePath))
-        //    {
-        //        throw new ArgumentNullException(nameof(filePath));
-        //    }
-
-        //    if (!File.Exists(filePath))
-        //    {
-        //        _logger.LogError("Customer file not found: {FilePath}", filePath);
-        //        return false;
-        //    }
-
-        //    try
-        //    {
-        //        _logger.LogInformation("Processing customer file: {FilePath}", filePath);
-
-        //        // Determine file type based on extension
-        //        string extension = Path.GetExtension(filePath).ToLowerInvariant();
-
-        //        switch (extension)
-        //        {
-        //            case ".csv":
-        //                return await ProcessCsvFileAsync(filePath);
-        //            case ".json":
-        //                return await ProcessJsonFileAsync(filePath);
-        //            case ".xml":
-        //                return await ProcessXmlFileAsync(filePath);
-        //            default:
-        //                _logger.LogWarning("Unsupported file extension for customer file: {Extension}", extension);
-        //                return false;
-        //        }
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        _logger.LogError(ex, "Error processing customer file: {FilePath}", filePath);
-        //        return false;
-        //    }
-        //}
-
-        //private async Task<bool> ProcessCsvFileAsync(string filePath)
-        //{
-        //    try
-        //    {
-        //        var customers = new List<Customer>();
-
-        //        using (var reader = new StreamReader(filePath))
-        //        using (var csv = new CsvReader(reader, CultureInfo.InvariantCulture))
-        //        {
-        //            // Configure CSV mapping if needed
-        //            // csv.Configuration.RegisterClassMap<CustomerMap>();
-
-        //            // Read all records
-        //            var records = csv.GetRecords<Customer>();
-        //            customers.AddRange(records);
-        //        }
-
-        //        // Process each customer
-        //        foreach (var customer in customers)
-        //        {
-        //            // Check if customer already exists
-        //            var existingCustomer = await _customerRepository.GetCustomerByIdAsync(customer.CustomerID);
-
-        //            if (existingCustomer != null)
-        //            {
-        //                // Update existing customer
-        //                await _customerRepository.UpdateCustomerAsync(customer);
-        //                _logger.LogInformation("Updated customer: {CustomerId}", customer.CustomerID);
-        //            }
-        //            else
-        //            {
-        //                // Create new customer
-        //                await _customerRepository.CreateCustomerAsync(customer);
-        //                _logger.LogInformation("Created new customer: {CustomerId}", customer.CustomerID);
-        //            }
-
-        //            // Synchronize with WMS
-        //            await _wmsService.SynchronizeCustomerAsync(customer);
-        //        }
-
-        //        _logger.LogInformation("Successfully processed {Count} customers from CSV file", customers.Count);
-        //        return true;
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        _logger.LogError(ex, "Error processing customer CSV file: {FilePath}", filePath);
-        //        return false;
-        //    }
-        //}
-
-        //private async Task<bool> ProcessJsonFileAsync(string filePath)
-        //{
-        //    try
-        //    {
-        //        string json = await File.ReadAllTextAsync(filePath);
-        //        var customers = Newtonsoft.Json.JsonConvert.DeserializeObject<List<Customer>>(json);
-
-        //        if (customers == null || !customers.Any())
-        //        {
-        //            _logger.LogWarning("No customers found in JSON file: {FilePath}", filePath);
-        //            return false;
-        //        }
-
-        //        // Process each customer
-        //        foreach (var customer in customers)
-        //        {
-        //            // Check if customer already exists
-        //            var existingCustomer = await _customerRepository.GetCustomerByIdAsync(customer.CustomerID);
-
-        //            if (existingCustomer != null)
-        //            {
-        //                // Update existing customer
-        //                await _customerRepository.UpdateCustomerAsync(customer);
-        //                _logger.LogInformation("Updated customer: {CustomerId}", customer.CustomerID);
-        //            }
-        //            else
-        //            {
-        //                // Create new customer
-        //                await _customerRepository.CreateCustomerAsync(customer);
-        //                _logger.LogInformation("Created new customer: {CustomerId}", customer.CustomerID);
-        //            }
-
-        //            // Synchronize with WMS
-        //            await _wmsService.SynchronizeCustomerAsync(customer);
-        //        }
-
-        //        _logger.LogInformation("Successfully processed {Count} customers from JSON file", customers.Count);
-        //        return true;
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        _logger.LogError(ex, "Error processing customer JSON file: {FilePath}", filePath);
-        //        return false;
-        //    }
-        //}
-
-        //private async Task<bool> ProcessXmlFileAsync(string filePath)
-        //{
-        //    try
-        //    {
-        //        var serializer = new System.Xml.Serialization.XmlSerializer(typeof(List<Customer>));
-
-        //        using (var stream = new FileStream(filePath, FileMode.Open))
-        //        {
-        //            var customers = (List<Customer>)serializer.Deserialize(stream);
-
-        //            if (customers == null || !customers.Any())
-        //            {
-        //                _logger.LogWarning("No customers found in XML file: {FilePath}", filePath);
-        //                return false;
-        //            }
-
-        //            // Process each customer
-        //            foreach (var customer in customers)
-        //            {
-        //                // Check if customer already exists
-        //                var existingCustomer = await _customerRepository.GetCustomerByIdAsync(customer.CustomerID);
-
-        //                if (existingCustomer != null)
-        //                {
-        //                    // Update existing customer
-        //                    await _customerRepository.UpdateCustomerAsync(customer);
-        //                    _logger.LogInformation("Updated customer: {CustomerId}", customer.CustomerID);
-        //                }
-        //                else
-        //                {
-        //                    // Create new customer
-        //                    await _customerRepository.CreateCustomerAsync(customer);
-        //                    _logger.LogInformation("Created new customer: {CustomerId}", customer.CustomerID);
-        //                }
-
-        //                // Synchronize with WMS
-        //                await _wmsService.SynchronizeCustomerAsync(customer);
-        //            }
-
-        //            _logger.LogInformation("Successfully processed {Count} customers from XML file", customers.Count);
-        //            return true;
-        //        }
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        _logger.LogError(ex, "Error processing customer XML file: {FilePath}", filePath);
-        //        return false;
-        //    }
-        //}
     }
 }
