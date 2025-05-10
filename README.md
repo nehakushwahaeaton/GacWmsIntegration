@@ -10,6 +10,7 @@ CREATE TABLE CustomerMaster (
     Name NVARCHAR(100) NOT NULL,
     Address NVARCHAR(255) NOT NULL
 );
+
 -- Create table for Product Master Data
 CREATE TABLE ProductMaster (
     ProductCode NVARCHAR(50) PRIMARY KEY,
@@ -17,6 +18,7 @@ CREATE TABLE ProductMaster (
     Description NVARCHAR(255),
     Dimensions NVARCHAR(100)
 );
+
 -- Create table for Purchase Orders (POs)
 CREATE TABLE PurchaseOrders (
     OrderID INT PRIMARY KEY,
@@ -24,6 +26,7 @@ CREATE TABLE PurchaseOrders (
     CustomerID INT NOT NULL,
     FOREIGN KEY (CustomerID) REFERENCES CustomerMaster(CustomerID)
 );
+
 -- Create table for Purchase Order Details
 CREATE TABLE PurchaseOrderDetails (
     OrderDetailID INT PRIMARY KEY IDENTITY(1,1),
@@ -33,6 +36,7 @@ CREATE TABLE PurchaseOrderDetails (
     FOREIGN KEY (OrderID) REFERENCES PurchaseOrders(OrderID),
     FOREIGN KEY (ProductCode) REFERENCES ProductMaster(ProductCode)
 );
+
 -- Create table for Sales Orders (SOs)
 CREATE TABLE SalesOrders (
     OrderID INT PRIMARY KEY,
@@ -50,6 +54,7 @@ CREATE TABLE SalesOrderDetails (
     FOREIGN KEY (OrderID) REFERENCES SalesOrders(OrderID),
     FOREIGN KEY (ProductCode) REFERENCES ProductMaster(ProductCode)
 );
+
 -- Create table for tracking file processing
 CREATE TABLE FileProcessingLog (
     LogID INT IDENTITY(1,1) PRIMARY KEY,
