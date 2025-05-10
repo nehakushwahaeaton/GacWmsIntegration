@@ -8,7 +8,11 @@ Create SQL table
 CREATE TABLE CustomerMaster (
     CustomerID INT PRIMARY KEY,
     Name NVARCHAR(100) NOT NULL,
-    Address NVARCHAR(255) NOT NULL
+    Address NVARCHAR(255) NOT NULL,
+    CreatedDate DATETIME DEFAULT GETDATE(),
+    CreatedBy NVARCHAR(50) DEFAULT SYSTEM_USER,
+    ModifiedDate DATETIME DEFAULT GETDATE(),
+    ModifiedBy NVARCHAR(50) DEFAULT SYSTEM_USER
 );
 
 -- Create table for Product Master Data
@@ -16,7 +20,11 @@ CREATE TABLE ProductMaster (
     ProductCode NVARCHAR(50) PRIMARY KEY,
     Title NVARCHAR(100) NOT NULL,
     Description NVARCHAR(255),
-    Dimensions NVARCHAR(100)
+    Dimensions NVARCHAR(100),
+    CreatedDate DATETIME DEFAULT GETDATE(),
+    CreatedBy NVARCHAR(50) DEFAULT SYSTEM_USER,
+    ModifiedDate DATETIME DEFAULT GETDATE(),
+    ModifiedBy NVARCHAR(50) DEFAULT SYSTEM_USER
 );
 
 -- Create table for Purchase Orders (POs)
@@ -24,15 +32,18 @@ CREATE TABLE PurchaseOrders (
     OrderID INT PRIMARY KEY,
     ProcessingDate DATETIME NOT NULL,
     CustomerID INT NOT NULL,
+    CreatedDate DATETIME DEFAULT GETDATE(),
+    CreatedBy NVARCHAR(50) DEFAULT SYSTEM_USER,
     FOREIGN KEY (CustomerID) REFERENCES CustomerMaster(CustomerID)
 );
 
 -- Create table for Purchase Order Details
 CREATE TABLE PurchaseOrderDetails (
-    OrderDetailID INT PRIMARY KEY IDENTITY(1,1),
+    OrderDetailID INT IDENTITY(1,1) PRIMARY KEY,
     OrderID INT NOT NULL,
     ProductCode NVARCHAR(50) NOT NULL,
     Quantity INT NOT NULL,
+    CreatedDate DATETIME DEFAULT GETDATE(),
     FOREIGN KEY (OrderID) REFERENCES PurchaseOrders(OrderID),
     FOREIGN KEY (ProductCode) REFERENCES ProductMaster(ProductCode)
 );
@@ -43,14 +54,18 @@ CREATE TABLE SalesOrders (
     ProcessingDate DATETIME NOT NULL,
     CustomerID INT NOT NULL,
     ShipmentAddress NVARCHAR(255) NOT NULL,
+    CreatedDate DATETIME DEFAULT GETDATE(),
+    CreatedBy NVARCHAR(50) DEFAULT SYSTEM_USER,
     FOREIGN KEY (CustomerID) REFERENCES CustomerMaster(CustomerID)
 );
+
 -- Create table for Sales Order Details
 CREATE TABLE SalesOrderDetails (
-    OrderDetailID INT PRIMARY KEY IDENTITY(1,1),
+    OrderDetailID INT IDENTITY(1,1) PRIMARY KEY,
     OrderID INT NOT NULL,
     ProductCode NVARCHAR(50) NOT NULL,
     Quantity INT NOT NULL,
+    CreatedDate DATETIME DEFAULT GETDATE(),
     FOREIGN KEY (OrderID) REFERENCES SalesOrders(OrderID),
     FOREIGN KEY (ProductCode) REFERENCES ProductMaster(ProductCode)
 );
