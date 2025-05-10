@@ -1,8 +1,28 @@
-# GacWmsIntegration
-Gac Wms Integration
+# GAC Warehouse Management System Integration
 
+## Case Study Overview
+This project implements an integration system between an enterprise application and the GAC Warehouse Management System (WMS). The integration handles data synchronization for customers, products, purchase orders, and sales orders between the two systems.
 
-Create SQL table
+## Project Structure
+
+#### GacWmsIntegration/
+#### ├── GacWmsIntegration/                  # API Host project
+#### ├── GacWmsIntegration.Core/             # Core business logic and domain models
+#### ├── GacWmsIntegration.Infrastructure/    # Data access and external services
+#### ├── GacWmsIntegration.FileProcessor/     # File processing service
+#### └── GacWmsIntegration.Tests/            # Unit and integration tests
+
+## Getting Started
+### Prerequisites
+- .NET 6.0 SDK or later
+- SQL Server 2019 or later
+- Visual Studio 2022 or similar IDE
+
+### Database Setup
+#### 1. Create a new database in SQL Server:
+CREATE DATABASE GacWmsIntegration;
+
+#### 2. Run the database schema creation script:
 
 -- Create table for Customer Master Data
 CREATE TABLE CustomerMaster (
@@ -131,3 +151,9 @@ FileProcessingLog tracks the processing of XML files from legacy systems
 WmsSyncLog monitors the synchronization status with the GAC WMS
 SchedulerConfig manages the CRON-based scheduling for file polling
 This structure supports both real-time API integration and file-based integration for legacy systems. The database will store all incoming data, allowing for validation, transformation, and synchronization with the GAC WMS.
+
+#### 3. Update the connection string in appsettings.json:
+
+"ConnectionStrings": {
+  "DefaultConnection": "Server=tcp:gacserverwarehouse.database.windows.net,1433;Initial Catalog=gacwmsdb;Persist Security Info=False;User ID=eatonadmin;Password=Qwertyuiop@12;MultipleActiveResultSets=False;Encrypt=True;TrustServerCertificate=False;Connection Timeout=30;"
+}
