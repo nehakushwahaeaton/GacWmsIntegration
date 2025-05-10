@@ -1,0 +1,15 @@
+﻿################################################################################
+# This .gitignore file was automatically created by Microsoft(R) Visual Studio.
+################################################################################
+
+/GacWmsIntegration/bin/Debug/net8.0
+/GacWmsIntegration/Logs
+/GacWmsIntegration/obj
+/GacWmsIntegration.Core/bin/Debug/net8.0
+/GacWmsIntegration.Core/obj
+/GacWmsIntegration.FileProcessor/bin/Debug/net8.0
+/GacWmsIntegration.FileProcessor/obj/Debug/net8.0
+/GacWmsIntegration.FileProcessor/obj
+/GacWmsIntegration.Infrastructure/obj
+/GacWmsIntegration.Infrastructure/bin/Debug/net8.0
+/.vs
