@@ -59,6 +59,86 @@ The GAC WMS Integration System connects different systems to GAC's Warehouse Man
 #### ├── GacWmsIntegration.FileProcessor/     # File processing service
 #### └── GacWmsIntegration.Tests/            # Unit and integration tests
 ----------
+# Project Structure and Design Patterns
+The GAC WMS Integration project demonstrates a well-organized architecture that follows several key software design principles and patterns:
+
+### 1. Clean Architecture
+The project follows Clean Architecture principles with clear separation of concerns:
+
+Core Layer (GacWmsIntegration.Core): Contains domain models, interfaces, and business logic
+Infrastructure Layer (GacWmsIntegration.Infrastructure): Handles data access and external dependencies
+Presentation Layer (GacWmsIntegration): API controllers and DTOs
+File Processing Layer (GacWmsIntegration.FileProcessor): Specialized component for file-based integration
+This layered approach ensures that business rules are isolated from external concerns like UI and databases, making the system more maintainable and testable.
+
+### 2. Dependency Injection
+The project uses dependency injection extensively:
+
+DependencyInjection.cs in the Infrastructure project centralizes service registration
+Services are accessed through interfaces rather than concrete implementations
+This facilitates loose coupling and makes the system more testable
+### 3. Repository Pattern
+While not explicitly named, the project likely implements the Repository pattern through:
+
+ApplicationDbContext serving as the data access layer
+IApplicationDbContext interface abstracting database operations
+Service classes that use the context to perform CRUD operations
+### 4. Service Pattern
+The project implements the Service pattern for business logic:
+
+CustomerService, ProductService, etc. encapsulate business rules
+Services are accessed through interfaces (ICustomerService, etc.)
+This centralizes business logic and separates it from controllers
+### 5. DTO Pattern
+The project uses Data Transfer Objects (DTOs) to:
+
+Decouple the API contract from internal domain models
+Control what data is exposed through the API
+Validate input data before processing
+## SOLID Principles Application
+#### 1. Single Responsibility Principle (SRP)
+Each service class has a single responsibility (e.g., ProductService handles only product-related operations)
+Controllers are focused on HTTP request/response handling
+File processing is separated into dedicated components
+#### 2. Open/Closed Principle (OCP)
+The use of interfaces allows for extending functionality without modifying existing code
+New file types can be added without changing the core file processing logic
+The scheduler service can be extended to support new schedules without modifying existing code
+#### 3. Liskov Substitution Principle (LSP)
+Service implementations can be substituted with mock implementations in tests
+The application context interface ensures that any implementation can be used interchangeably
+#### 4. Interface Segregation Principle (ISP)
+Interfaces are specific to their use cases (e.g., IProductService, ICustomerService)
+No evidence of "fat interfaces" that would force implementations to provide unnecessary methods
+#### 5. Dependency Inversion Principle (DIP)
+High-level modules (controllers, services) depend on abstractions (interfaces)
+Low-level modules (data access) implement these abstractions
+This allows for swapping implementations (e.g., for testing) without affecting business logic
+### Additional Architectural Patterns
+#### 1. MVC/Web API Pattern
+Controllers handle HTTP requests and responses
+Models represent domain entities
+Services contain the business logic (replacing traditional "Controllers" in MVC)
+#### 2. Unit of Work Pattern
+ApplicationDbContext likely serves as a Unit of Work
+Ensures that database operations are atomic and consistent
+#### 3. Scheduler Pattern
+SchedulerService implements a scheduling mechanism for file processing
+Allows for configurable, time-based execution of tasks
+### Testing Approach
+The project demonstrates a comprehensive testing strategy:
+
+- Unit Tests: Testing individual components in isolation (services, controllers)
+- Integration Tests: Testing interactions between components
+- Test Organization: Tests mirror the structure of the main codebase
+
+### File Processing Architecture
+The file processing component shows a well-designed approach to handling file-based integration:
+
+- Configuration-Driven: Uses FileProcessingConfig and FileWatcherConfig for flexible configuration
+- Parser Strategy: Different XML parsers for different file types
+- Scheduled Processing: Uses a scheduler service for timed execution
+----------
 ## 🛠️ Getting Started
 ### Prerequisites
 ```bash
