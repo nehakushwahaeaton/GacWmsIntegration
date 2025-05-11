@@ -21,3 +21,5 @@
 /GacWmsIntegration.FileProcessor.Tests/obj
 /GacWmsIntegration.Infrastructure.Tests/bin/Debug/net8.0
 /GacWmsIntegration.Infrastructure.Tests/obj
+/GacWmsIntegration.Tests/bin/Debug/net8.0
+/GacWmsIntegration.Tests/obj
