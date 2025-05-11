@@ -360,6 +360,7 @@ This will start the API Host project, which includes the Swagger and REST API.
 
 #### 8. Running the File Processing Service:
 Navigate to the GacWmsIntegration.FileProcessor directory and run the console application using the .NET CLI:
+The ApiHealthCheckService will ensure, API's are running before any File processing begins, also the file execution will retry 5 time(configurable) before giving up.
 ```
 cd GacWmsIntegration/GacWmsIntegration.FileProcessor
 dotnet run
