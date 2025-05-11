@@ -1,8 +1,10 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Diagnostics.CodeAnalysis;
 
 namespace GacWmsIntegration.Core.Models
 {
+    [ExcludeFromCodeCoverage]
     public class PurchaseOrder
     {
         [Key]
@@ -18,6 +20,7 @@ namespace GacWmsIntegration.Core.Models
         public virtual ICollection<PurchaseOrderDetails> Items { get; set; } = new List<PurchaseOrderDetails>(); // Changed to match SQL table
     }
 
+    [ExcludeFromCodeCoverage]
     public class PurchaseOrderDetails
     {
         public int OrderDetailID { get; set; }

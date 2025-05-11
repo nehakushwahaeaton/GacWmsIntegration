@@ -1,9 +1,11 @@
 ﻿using GacWmsIntegration.Core.Models;
 using System.ComponentModel.DataAnnotations;
+using System.Diagnostics.CodeAnalysis;
 
 namespace GacWmsIntegration.DTOs
 {
     // Represents a product entity with all its properties
+    [ExcludeFromCodeCoverage]
     public class ProductDto
     {
         [Required]
@@ -26,6 +28,7 @@ namespace GacWmsIntegration.DTOs
     }
 
     // Used for creating new products
+    [ExcludeFromCodeCoverage]
     public class ProductCreateDto
     {
         [Required]
@@ -44,6 +47,7 @@ namespace GacWmsIntegration.DTOs
     }
 
     // Used for updating existing products
+    [ExcludeFromCodeCoverage]
     public class ProductUpdateDto
     {
         [Required]
@@ -60,6 +64,7 @@ namespace GacWmsIntegration.DTOs
     }
 
     // Used to return inventory information for a product
+    [ExcludeFromCodeCoverage]
     public class ProductInventoryDto
     {
         [Required]

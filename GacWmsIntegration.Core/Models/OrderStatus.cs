@@ -1,4 +1,6 @@
-﻿namespace GacWmsIntegration.Core.Models
+﻿using System.Diagnostics.CodeAnalysis;
+
+namespace GacWmsIntegration.Core.Models
 {
     public enum OrderStatus
     {

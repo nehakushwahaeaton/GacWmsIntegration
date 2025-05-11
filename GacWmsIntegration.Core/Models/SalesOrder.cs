@@ -1,8 +1,10 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Diagnostics.CodeAnalysis;
 
 namespace GacWmsIntegration.Core.Models
 {
+    [ExcludeFromCodeCoverage]
     public class SalesOrder
     {
         [Key]
@@ -19,6 +21,7 @@ namespace GacWmsIntegration.Core.Models
         public virtual ICollection<SalesOrderDetails> Items { get; set; } = new List<SalesOrderDetails>();  
     }
 
+    [ExcludeFromCodeCoverage]
     public class SalesOrderDetails
     {
         [Key]

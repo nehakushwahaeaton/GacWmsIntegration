@@ -13,3 +13,11 @@
 /GacWmsIntegration.Infrastructure/obj
 /GacWmsIntegration.Infrastructure/bin/Debug/net8.0
 /.vs
+/GacWmsIntegratio/bin/Debug/net8.0
+/GacWmsIntegratio/obj
+/GacWmsIntegration.Core.Tests/bin/Debug/net8.0
+/GacWmsIntegration.Core.Tests/obj
+/GacWmsIntegration.FileProcessor.Tests/bin/Debug/net8.0
+/GacWmsIntegration.FileProcessor.Tests/obj
+/GacWmsIntegration.Infrastructure.Tests/bin/Debug/net8.0
+/GacWmsIntegration.Infrastructure.Tests/obj

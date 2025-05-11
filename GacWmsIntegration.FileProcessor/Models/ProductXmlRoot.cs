@@ -1,15 +1,18 @@
 ﻿
+using System.Diagnostics.CodeAnalysis;
 using System.Xml.Serialization;
 
 namespace GacWmsIntegration.FileProcessor.Models
 {
     [XmlRoot("Products")]
+    [ExcludeFromCodeCoverage]
     public class ProductXmlRoot
     {
         [XmlElement("Product")]
         public List<ProductXml> Products { get; set; } = new List<ProductXml>();
     }
 
+    [ExcludeFromCodeCoverage]
     public class ProductXml
     {
         [XmlElement("ProductCode")]

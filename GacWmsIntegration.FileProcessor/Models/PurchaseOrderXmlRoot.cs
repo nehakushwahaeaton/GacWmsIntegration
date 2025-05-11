@@ -1,15 +1,18 @@
 ﻿
+using System.Diagnostics.CodeAnalysis;
 using System.Xml.Serialization;
 
 namespace GacWmsIntegration.FileProcessor.Models
 {
     [XmlRoot("PurchaseOrders")]
+    [ExcludeFromCodeCoverage]
     public class PurchaseOrderXmlRoot
     {
         [XmlElement("PurchaseOrder")]
         public List<PurchaseOrderXml> PurchaseOrders { get; set; } = new List<PurchaseOrderXml>();
     }
 
+    [ExcludeFromCodeCoverage]
     public class PurchaseOrderXml
     {
         [XmlElement("OrderID")]

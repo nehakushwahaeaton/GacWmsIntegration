@@ -1,11 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Diagnostics.CodeAnalysis;
 
 namespace GacWmsIntegration.FileProcessor.Models
 {
+    [ExcludeFromCodeCoverage]
     public class FileProcessingConfig
     {
         public List<FileWatcherConfig> FileWatchers { get; set; } = new List<FileWatcherConfig>();

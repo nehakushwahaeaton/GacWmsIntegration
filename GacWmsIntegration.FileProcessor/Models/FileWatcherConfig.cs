@@ -1,5 +1,8 @@
-﻿namespace GacWmsIntegration.FileProcessor.Models
+﻿using System.Diagnostics.CodeAnalysis;
+
+namespace GacWmsIntegration.FileProcessor.Models
 {
+    [ExcludeFromCodeCoverage]
     public class FileWatcherConfig
     {
         public string Name { get; set; } = string.Empty;

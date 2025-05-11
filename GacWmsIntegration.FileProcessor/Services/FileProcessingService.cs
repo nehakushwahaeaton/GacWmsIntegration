@@ -8,6 +8,7 @@ using Polly.Retry;
 using Polly;
 using System.Diagnostics;
 using System.Xml.Linq;
+using GacWmsIntegration.FileProcessor.Interfaces;
 
 namespace GacWmsIntegration.FileProcessor.Services
 {
@@ -18,7 +19,7 @@ namespace GacWmsIntegration.FileProcessor.Services
     {
         private readonly ILogger<FileProcessingService> _logger;
         private readonly FileProcessingConfig _config;
-        private readonly XmlParserService _xmlParser;
+        private readonly IXmlParserService _xmlParser;
         private readonly ICustomerService _customerService;
         private readonly IProductService _productService;
         private readonly IPurchaseOrderService _purchaseOrderService;
@@ -28,7 +29,7 @@ namespace GacWmsIntegration.FileProcessor.Services
         public FileProcessingService(
             ILogger<FileProcessingService> logger,
             IOptions<FileProcessingConfig> config,
-            XmlParserService xmlParser,
+            IXmlParserService xmlParser,
             ICustomerService customerService,
             IProductService productService,
             IPurchaseOrderService purchaseOrderService,

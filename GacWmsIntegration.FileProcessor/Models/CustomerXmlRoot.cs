@@ -1,15 +1,18 @@
 ﻿
+using System.Diagnostics.CodeAnalysis;
 using System.Xml.Serialization;
 
 namespace GacWmsIntegration.FileProcessor.Models
 {
     [XmlRoot("Customers")]
+    [ExcludeFromCodeCoverage]
     public class CustomerXmlRoot
     {
         [XmlElement("Customer")]
         public List<CustomerXml> Customers { get; set; } = new List<CustomerXml>();
     }
 
+    [ExcludeFromCodeCoverage]
     public class CustomerXml
     {
         [XmlElement("CustomerID")]
@@ -22,6 +25,7 @@ namespace GacWmsIntegration.FileProcessor.Models
         public string Address { get; set; } = string.Empty;
     }
 
+    [ExcludeFromCodeCoverage]
     public class OrderDetailXml
     {
         [XmlElement("ProductCode")]

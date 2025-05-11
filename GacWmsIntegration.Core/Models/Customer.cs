@@ -1,11 +1,13 @@
 ﻿
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Diagnostics.CodeAnalysis;
 
 namespace GacWmsIntegration.Core.Models
 {
     //CustomerMaster  SQL table
     [Table("CustomerMaster")]
+    [ExcludeFromCodeCoverage]
     public class Customer
     {
         [Key]

@@ -3,10 +3,11 @@ using System.Xml.Serialization;
 using System.Xml;
 using GacWmsIntegration.Core.Models;
 using GacWmsIntegration.FileProcessor.Models;
+using GacWmsIntegration.FileProcessor.Interfaces;
 
 namespace GacWmsIntegration.FileProcessor.Services
 {
-    public class XmlParserService
+    public class XmlParserService : IXmlParserService
     {
         private readonly ILogger<XmlParserService> _logger;
 

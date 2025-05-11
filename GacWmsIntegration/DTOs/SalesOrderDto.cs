@@ -1,18 +1,10 @@
 ﻿using Microsoft.VisualBasic;
 using System.ComponentModel.DataAnnotations;
+using System.Diagnostics.CodeAnalysis;
 
 namespace GacWmsIntegration.DTOs
 {
-//    SalesOrderDto
-//Represents a sales order with its header information and line items
-//SalesOrderItemDto: Represents a line item in a sales order
-//SalesOrderCreateDto: Used for creating new sales orders
-//SalesOrderItemCreateDto: Used for creating sales order line items
-//SalesOrderUpdateDto: Used for updating existing sales orders
-//SalesOrderItemUpdateDto: Used for updating sales order line items
-//SalesOrderStatusUpdateDto: Used for updating just the status of a sales order
-//SalesOrderInventoryCheckResultDto: Used to return inventory check results for a sales order
-//SalesOrderItemInventoryStatusDto: Used to return inventory status for a sales order line item
+    [ExcludeFromCodeCoverage]
     public class SalesOrderDto
     {
         public string Id { get; set; }

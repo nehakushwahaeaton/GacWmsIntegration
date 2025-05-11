@@ -1,6 +1,7 @@
 ﻿
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
+using System.Diagnostics.CodeAnalysis;
 
 namespace GacWmsIntegration.Core.Models
 {
@@ -8,6 +9,7 @@ namespace GacWmsIntegration.Core.Models
 
     [Table("ProductMaster")]
 
+    [ExcludeFromCodeCoverage]
     public class Product
     {
         [Key]
