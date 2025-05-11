@@ -65,10 +65,11 @@ The GAC WMS Integration project demonstrates a well-organized architecture that 
 ### 1. Clean Architecture
 The project follows Clean Architecture principles with clear separation of concerns:
 
-Core Layer (GacWmsIntegration.Core): Contains domain models, interfaces, and business logic
-Infrastructure Layer (GacWmsIntegration.Infrastructure): Handles data access and external dependencies
-Presentation Layer (GacWmsIntegration): API controllers and DTOs
-File Processing Layer (GacWmsIntegration.FileProcessor): Specialized component for file-based integration
+- Core Layer (GacWmsIntegration.Core): Contains domain models, interfaces, and business logic
+- Infrastructure Layer (GacWmsIntegration.Infrastructure): Handles data access and external dependencies
+- Presentation Layer (GacWmsIntegration): API controllers and DTOs
+- File Processing Layer (GacWmsIntegration.FileProcessor): Specialized component for file-based integration
+
 This layered approach ensures that business rules are isolated from external concerns like UI and databases, making the system more maintainable and testable.
 
 ### 2. Dependency Injection
