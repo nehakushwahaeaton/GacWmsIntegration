@@ -24,6 +24,12 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GacWmsIntegration.Infrastructure.Tests", "GacWmsIntegration.Infrastructure.Tests\GacWmsIntegration.Infrastructure.Tests.csproj", "{D4CC9C59-9F05-4A43-A3E7-CA8DCF5A122C}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Images", "Images", "{178DDF54-A193-4825-91D9-BE7822051312}"
+	ProjectSection(SolutionItems) = preProject
+		..\..\..\..\Downloads\Architecture_Flow_Diagarm.png = ..\..\..\..\Downloads\Architecture_Flow_Diagarm.png
+		..\..\..\..\Downloads\ClientApplicationFlow.png = ..\..\..\..\Downloads\ClientApplicationFlow.png
+		..\..\..\..\Downloads\File-based-Integration.png = ..\..\..\..\Downloads\File-based-Integration.png
+		..\..\..\..\Downloads\Real-time-Integration.png = ..\..\..\..\Downloads\Real-time-Integration.png
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
