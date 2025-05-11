@@ -17,11 +17,13 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{F849443B
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GacWmsIntegration.Tests", "GacWmsIntegratio\GacWmsIntegration.Tests.csproj", "{1D5DE01E-DE68-4F4B-B165-441B4DE3D264}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GacWmsIntegration.Core.Tests", "GacWmsIntegration.Core.Tests\GacWmsIntegration.Core.Tests.csproj", "{3541B518-9FF4-4E60-AE83-ECA95A51FA44}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GacWmsIntegration.Core.Tests", "GacWmsIntegration.Core.Tests\GacWmsIntegration.Core.Tests.csproj", "{3541B518-9FF4-4E60-AE83-ECA95A51FA44}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GacWmsIntegration.FileProcessor.Tests", "GacWmsIntegration.FileProcessor.Tests\GacWmsIntegration.FileProcessor.Tests.csproj", "{71B7FF29-1728-4B97-8F54-E096D763D443}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GacWmsIntegration.FileProcessor.Tests", "GacWmsIntegration.FileProcessor.Tests\GacWmsIntegration.FileProcessor.Tests.csproj", "{71B7FF29-1728-4B97-8F54-E096D763D443}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GacWmsIntegration.Infrastructure.Tests", "GacWmsIntegration.Infrastructure.Tests\GacWmsIntegration.Infrastructure.Tests.csproj", "{D4CC9C59-9F05-4A43-A3E7-CA8DCF5A122C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GacWmsIntegration.Infrastructure.Tests", "GacWmsIntegration.Infrastructure.Tests\GacWmsIntegration.Infrastructure.Tests.csproj", "{D4CC9C59-9F05-4A43-A3E7-CA8DCF5A122C}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Images", "Images", "{178DDF54-A193-4825-91D9-BE7822051312}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
