@@ -1,10 +1,8 @@
-﻿using AutoMapper;
-using Cronos;
+﻿using Cronos;
 using GacWmsIntegration.FileProcessor.Models;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-using Quartz;
 
 namespace GacWmsIntegration.FileProcessor.Services
 {
@@ -14,6 +12,8 @@ namespace GacWmsIntegration.FileProcessor.Services
         private readonly FileProcessingConfig _config;
         private readonly FileProcessingService _fileProcessingService;
         private readonly Dictionary<string, Timer> _timers = new();
+        private bool _isProcessingEnabled = false;
+        private readonly SemaphoreSlim _startSemaphore = new SemaphoreSlim(0, 1);
 
         public SchedulerService(
             ILogger<SchedulerService> logger,
@@ -25,16 +25,77 @@ namespace GacWmsIntegration.FileProcessor.Services
             _fileProcessingService = fileProcessingService;
         }
 
-        protected override Task ExecuteAsync(CancellationToken stoppingToken)
+        public async Task StartProcessing()
         {
-            _logger.LogInformation("Scheduler Service starting");
+            _isProcessingEnabled = true;
 
-            foreach (var watcher in _config.FileWatchers)
+            // Release the semaphore to allow the ExecuteAsync method to proceed
+            if (_startSemaphore.CurrentCount == 0)
             {
-                ScheduleFileWatcher(watcher, stoppingToken);
+                _startSemaphore.Release();
+                _logger.LogInformation("Semaphore released to start file processing.");
             }
 
-            return Task.CompletedTask;
+            _logger.LogInformation("File processing has been enabled");
+
+            // Process files immediately
+            if (_config.FileWatchers != null && _config.FileWatchers.Length > 0)
+            {
+                _logger.LogInformation("Running immediate file processing for all watchers");
+                foreach (var watcher in _config.FileWatchers)
+                {
+                    try
+                    {
+                        _logger.LogInformation("Immediate processing for watcher: {WatcherName}", watcher.Name);
+                        await _fileProcessingService.ProcessFilesAsync(watcher, CancellationToken.None);
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "Error during immediate processing for watcher: {WatcherName}", watcher.Name);
+                    }
+                }
+            }
+        }
+
+        protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+        {
+            _logger.LogInformation("Scheduler Service is waiting for API to be available...");
+
+            // Wait for the semaphore to be released by the health check service
+            await _startSemaphore.WaitAsync(stoppingToken);
+
+            _logger.LogInformation("Scheduler Service starting file processing");
+
+            // Log the configuration to help with debugging
+            if (_config.FileWatchers == null || _config.FileWatchers.Length == 0)
+            {
+                _logger.LogWarning("No file watchers configured in settings. Check your appsettings.json file.");
+            }
+            else
+            {
+                _logger.LogInformation("Configured file watchers:");
+                foreach (var watcher in _config.FileWatchers)
+                {
+                    _logger.LogInformation("Watcher: {Name}, Directory: {Directory}, Pattern: {Pattern}, FileType: {FileType}",
+                        watcher.Name, watcher.DirectoryPath, watcher.FilePattern, watcher.FileType);
+
+                    // Check if directory exists
+                    if (!Directory.Exists(watcher.DirectoryPath))
+                    {
+                        _logger.LogWarning("Directory does not exist: {Directory}", watcher.DirectoryPath);
+                    }
+                    else
+                    {
+                        // Check if there are any matching files
+                        var files = Directory.GetFiles(watcher.DirectoryPath, watcher.FilePattern);
+                        _logger.LogInformation("Found {Count} files matching pattern in {Directory}",
+                            files.Length, watcher.DirectoryPath);
+                    }
+
+                    // Schedule the file watcher
+                    ScheduleFileWatcher(watcher, stoppingToken);
+                }
+            }
         }
 
         private void ScheduleFileWatcher(FileWatcherConfig watcher, CancellationToken stoppingToken)

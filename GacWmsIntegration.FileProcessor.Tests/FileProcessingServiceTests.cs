@@ -36,28 +36,31 @@ namespace GacWmsIntegration.FileProcessor.Tests
             _config = new FileProcessingConfig
             {
                 FileWatchers = new List<FileWatcherConfig>
-                {
-                    new FileWatcherConfig
-                    {
-                        Name = "CustomerWatcher",
-                        DirectoryPath = "TestData/Customers",
-                        FilePattern = "*.xml",
-                        FileType = FileType.Customer,
-                        MaxRetryAttempts = 3,
-                        ArchiveProcessedFiles = true,
-                        ArchivePath = "TestData/Archive/Customers"
-                    },
-                    new FileWatcherConfig
-                    {
-                        Name = "ProductWatcher",
-                        DirectoryPath = "TestData/Products",
-                        FilePattern = "*.xml",
-                        FileType = FileType.Product,
-                        MaxRetryAttempts = 3,
-                        ArchiveProcessedFiles = false
-                    }
-                }
+    {
+        new FileWatcherConfig
+        {
+            Name = "CustomerWatcher",
+            DirectoryPath = "TestData/Customers",
+            FilePattern = "*.xml",
+            CronSchedule = "*/5 * * * *",
+            FileType = FileType.Customer,
+            MaxRetryAttempts = 3,
+            ArchiveProcessedFiles = true,
+            ArchivePath = "TestData/Archive/Customers"
+        },
+        new FileWatcherConfig
+        {
+            Name = "ProductWatcher",
+            DirectoryPath = "TestData/Products",
+            FilePattern = "*.xml",
+            CronSchedule = "*/5 * * * *",
+            FileType = FileType.Product,
+            MaxRetryAttempts = 3,
+            ArchiveProcessedFiles = false
+        }
+    }.ToArray() // Convert the list to an array
             };
+
 
             _configMock = new Mock<IOptions<FileProcessingConfig>>();
             _configMock.Setup(x => x.Value).Returns(_config);

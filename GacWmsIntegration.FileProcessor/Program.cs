@@ -49,8 +49,8 @@ try
 
             services.AddLogging(builder => builder.AddSerilog(dispose: true));
 
-            // Register infrastructure services
-            //services.AddInfrastructureServices(hostContext.Configuration);
+            // Add HttpClientFactory for API health checks
+            services.AddHttpClient();
 
             // Register DbContext
             services.AddDbContext<ApplicationDbContext>(options =>
@@ -71,7 +71,10 @@ try
             services.Configure<FileProcessingConfig>(hostContext.Configuration.GetSection("FileProcessing"));
             services.AddSingleton<IXmlParserService, XmlParserService>(); // Register IXmlParserService
             services.AddSingleton<FileProcessingService>();
-            services.AddHostedService<SchedulerService>();
+            services.AddSingleton<SchedulerService>();
+
+            // Register the health check service
+            services.AddHostedService<ApiHealthCheckService>();
         })
         .UseSerilog()
         .Build();

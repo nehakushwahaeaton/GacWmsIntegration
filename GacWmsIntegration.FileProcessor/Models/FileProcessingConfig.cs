@@ -5,6 +5,7 @@ namespace GacWmsIntegration.FileProcessor.Models
     [ExcludeFromCodeCoverage]
     public class FileProcessingConfig
     {
-        public List<FileWatcherConfig> FileWatchers { get; set; } = new List<FileWatcherConfig>();
+        public FileWatcherConfig[] FileWatchers { get; set; } = Array.Empty<FileWatcherConfig>();
+        public int ProcessingIntervalMinutes { get; set; } = 5;
     }
 }

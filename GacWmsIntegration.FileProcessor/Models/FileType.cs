@@ -2,6 +2,7 @@
 {
     public enum FileType
     {
+        Unknown,
         Customer,
         Product,
         PurchaseOrder,

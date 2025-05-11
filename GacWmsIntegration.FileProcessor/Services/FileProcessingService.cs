@@ -60,6 +60,7 @@ namespace GacWmsIntegration.FileProcessor.Services
             }
         }
 
+
         public async Task ProcessFilesAsync(FileWatcherConfig watcherConfig, CancellationToken cancellationToken)
         {
             try
@@ -110,6 +111,40 @@ namespace GacWmsIntegration.FileProcessor.Services
                 _logger.LogError(ex, "Error processing files for {WatcherName}", watcherConfig.Name);
             }
         }
+
+        /// <summary>
+        /// Process all files from all configured watchers
+        /// </summary>
+        /// <param name="cancellationToken">Cancellation token</param>
+        /// <returns>A task representing the asynchronous operation</returns>
+        public async Task ProcessFilesAsync(CancellationToken cancellationToken = default)
+        {
+            _logger.LogInformation("Starting file processing for all watchers");
+
+            if (_config.FileWatchers == null || _config.FileWatchers.Length == 0)
+            {
+                _logger.LogWarning("No file watchers configured. Nothing to process.");
+                return;
+            }
+
+            foreach (var watcherConfig in _config.FileWatchers)
+            {
+                if (cancellationToken.IsCancellationRequested)
+                    break;
+
+                try
+                {
+                    await ProcessFilesAsync(watcherConfig, cancellationToken);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error processing files for watcher {WatcherName}", watcherConfig.Name);
+                }
+            }
+
+            _logger.LogInformation("Completed file processing for all watchers");
+        }
+
 
         private async Task ProcessFileAsync(string filePath, FileType fileType)
         {
