@@ -1,5 +1,6 @@
 ﻿using GacWmsIntegration.Core.Interfaces;
 using GacWmsIntegration.Core.Services;
+using GacWmsIntegration.FileProcessor.Interfaces;
 using GacWmsIntegration.FileProcessor.Models;
 using GacWmsIntegration.FileProcessor.Services;
 using GacWmsIntegration.Infrastructure.Data;
@@ -68,7 +69,7 @@ try
 
             // Register file processor services
             services.Configure<FileProcessingConfig>(hostContext.Configuration.GetSection("FileProcessing"));
-            services.AddSingleton<XmlParserService>();
+            services.AddSingleton<IXmlParserService, XmlParserService>(); // Register IXmlParserService
             services.AddSingleton<FileProcessingService>();
             services.AddHostedService<SchedulerService>();
         })
@@ -88,4 +89,3 @@ finally
 {
     Log.CloseAndFlush();
 }
-
