@@ -1,7 +1,55 @@
-# GAC Warehouse Management System Integration
 
-## Case Study Overview
+# <p align="center">GAC Warehouse Management System Integration</p>
+  
+
+#### Case Study Overview
 This project implements an integration system between an enterprise application and the GAC Warehouse Management System (WMS). The integration handles data synchronization for customers, products, purchase orders, and sales orders between the two systems.
+
+
+
+### Architecture Diagarm
+- GAC WMS Integration System Architecture Diagram
+
+![alt text](https://github.com/nehakushwahaeaton/GacWmsIntegration/blob/main/Architecture_Flow_Diagarm.png?raw=true)
+The GAC WMS Integration System connects different systems to GAC's Warehouse Management System (WMS). It handles both real-time data from modern ERP systems and scheduled data from older systems that use files.
+
+## Components
+### External Systems:
+- **ERP Systems:** These are modern systems that send data like customer info, products, purchase orders, and sales orders directly to our system through APIs.   
+- **Legacy Systems:** These are older systems that generate XML files with data and place them in specific folders for our system to pick up.
+- **External Client Applications:** These are third-party apps that use our system's APIs to interact with the warehouse data.
+
+### Integration Components:
+- **Web API:** This is the part of our system that receives real-time data from ERP systems through APIs. It validates the data and sends it to the core services for processing.
+- **File Processor:** This component regularly checks folders for new XML files from legacy systems, reads and processes these files, and sends the data to the core services.
+- **Core Services:** These are the brains of our system. They handle all the business logic, like validating data and coordinating between different parts of the system.
+- **Data Access:** This part manages how data is stored and retrieved from the database. It ensures data is saved correctly and efficiently.
+- **WMS Client:** This component communicates with the GAC WMS, sending the processed data to the warehouse system and handling any responses.
+
+### Target Systems:
+- **SQL Server Database:** This is where all the data is stored, including customer info, products, orders, and logs.
+- **GAC Warehouse Management System (WMS):** This is the final destination for the data. It manages warehouse operations based on the data it receives.
+
+### Data Flow
+#### Real-time Integration:
+
+- ERP systems send data to our .NET Web API.
+- The API validates and processes the data, then sends it to the core services.
+- The core services handle the business logic and save the data to the SQL Server database.
+- The .NET WMS Client sends the data to the GAC WMS.
+
+#### File-based Integration:
+
+- Legacy systems generate XML files and place them in specific folders.
+- The .NET File Processor detects new files, reads and processes them.
+- The processed data is sent to the core services for validation and business logic.
+- The data is saved to the SQL Server database and sent to the GAC WMS by the .NET WMS Client.
+
+#### Client Application Flow:
+
+- External applications call our .NET Web API to interact with the warehouse data.
+- The API processes these requests through the core services.
+- Data is retrieved or modified in the SQL Server database and results are returned to the client application.
 
 ## Project Structure
 
