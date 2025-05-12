@@ -5,6 +5,7 @@ using Microsoft.Extensions.Logging;
 
 namespace GacWmsIntegration.Core.Services
 {
+    //TODO : Remove use of Lamda functions as it uses more CPU memory
     public class PurchaseOrderService : IPurchaseOrderService
     {
         private readonly IApplicationDbContext _dbContext;
