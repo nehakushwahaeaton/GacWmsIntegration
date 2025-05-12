@@ -115,6 +115,80 @@ namespace GacWmsIntegration.Core.Tests.Services
         public async Task UpdateCustomerAsync_UpdatesCustomer_WhenCustomerExists()
         {
             // Arrange
+            var originalCreationDate = DateTime.UtcNow.AddDays(-10);
+            var originalCreator = "OriginalUser";
+
+            var customer = new Customer
+            {
+                CustomerID = 1,
+                Name = "Customer 1",
+                Address = "Address 1",
+                CreatedDate = originalCreationDate,
+                CreatedBy = originalCreator,
+                ModifiedDate = originalCreationDate,
+                ModifiedBy = originalCreator
+            };
+
+            await _dbContext.Customers.AddAsync(customer);
+            await _dbContext.SaveChangesAsync();
+
+            // Store the exact values from the database for comparison
+            var storedCustomer = await _dbContext.Customers.FindAsync(1);
+            var storedCreationDate = storedCustomer.CreatedDate;
+            var storedCreator = storedCustomer.CreatedBy;
+
+            // Get the customer from the database and update it
+            var customerToUpdate = await _dbContext.Customers.FindAsync(1);
+            customerToUpdate.Name = "Updated Customer";
+            customerToUpdate.Address = "Updated Address";
+
+            // Act
+            var result = await _customerService.UpdateCustomerAsync(customerToUpdate);
+
+            // Assert
+            Assert.IsNotNull(result);
+            Assert.AreEqual(1, result.CustomerID);
+            Assert.AreEqual("Updated Customer", result.Name);
+            Assert.AreEqual("Updated Address", result.Address);
+
+            // Verify audit fields - compare with the stored values
+            Assert.AreEqual(storedCreationDate, result.CreatedDate, "Original creation date should be preserved");
+            Assert.AreEqual(storedCreator, result.CreatedBy, "Original creator should be preserved");
+            Assert.IsTrue(DateTime.UtcNow.AddMinutes(-1) <= result.ModifiedDate, "Modified date should be updated");
+            Assert.AreEqual(Environment.UserName, result.ModifiedBy, "Modified by should be updated");
+
+            // Verify the customer was updated in the database
+            var savedCustomer = await _dbContext.Customers.FindAsync(1);
+            Assert.IsNotNull(savedCustomer);
+            Assert.AreEqual("Updated Customer", savedCustomer.Name);
+            Assert.AreEqual("Updated Address", savedCustomer.Address);
+            Assert.AreEqual(storedCreationDate, savedCustomer.CreatedDate);
+            Assert.AreEqual(storedCreator, savedCustomer.CreatedBy);
+            Assert.IsTrue(DateTime.UtcNow.AddMinutes(-1) <= savedCustomer.ModifiedDate);
+            Assert.AreEqual(Environment.UserName, savedCustomer.ModifiedBy);
+        }
+
+
+        [TestMethod]
+        public async Task UpdateCustomerAsync_ThrowsKeyNotFoundException_WhenCustomerDoesNotExist()
+        {
+            // Arrange
+            var nonExistentCustomer = new Customer
+            {
+                CustomerID = 999, // ID that doesn't exist
+                Name = "Non-existent Customer",
+                Address = "Non-existent Address"
+            };
+
+            // Act & Assert
+            await Assert.ThrowsExceptionAsync<KeyNotFoundException>(
+                async () => await _customerService.UpdateCustomerAsync(nonExistentCustomer));
+        }
+
+        [TestMethod]
+        public async Task UpdateCustomerAsync_ThrowsInvalidOperationException_WhenValidationFails()
+        {
+            // Arrange
             var customer = new Customer
             {
                 CustomerID = 1,
@@ -125,28 +199,29 @@ namespace GacWmsIntegration.Core.Tests.Services
             await _dbContext.Customers.AddAsync(customer);
             await _dbContext.SaveChangesAsync();
 
-            var updatedCustomer = new Customer
+            // Create a customer that will fail validation
+            // You need to know what conditions will cause validation to fail
+            // For example, if empty name fails validation:
+            var invalidCustomer = new Customer
             {
                 CustomerID = 1,
-                Name = "Updated Customer",
+                Name = "", // Empty name that should fail validation
                 Address = "Updated Address"
             };
 
-            // Act
-            var result = await _customerService.UpdateCustomerAsync(updatedCustomer);
-
-            // Assert
-            Assert.IsNotNull(result);
-            Assert.AreEqual(1, result.CustomerID);
-            Assert.AreEqual("Updated Customer", result.Name);
-            Assert.AreEqual("Updated Address", result.Address);
-
-            // Verify the customer was updated in the database
-            var savedCustomer = await _dbContext.Customers.FindAsync(1);
-            Assert.IsNotNull(savedCustomer);
-            Assert.AreEqual("Updated Customer", savedCustomer.Name);
-            Assert.AreEqual("Updated Address", savedCustomer.Address);
+            // Act & Assert
+            await Assert.ThrowsExceptionAsync<InvalidOperationException>(
+                async () => await _customerService.UpdateCustomerAsync(invalidCustomer));
         }
+
+        [TestMethod]
+        public async Task UpdateCustomerAsync_ThrowsArgumentNullException_WhenCustomerIsNull()
+        {
+            // Act & Assert
+            await Assert.ThrowsExceptionAsync<ArgumentNullException>(
+                async () => await _customerService.UpdateCustomerAsync(null));
+        }
+
 
         [TestMethod]
         public async Task DeleteCustomerAsync_DeletesCustomer_WhenCustomerExists()

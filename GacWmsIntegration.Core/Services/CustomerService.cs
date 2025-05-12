@@ -2,7 +2,6 @@
 using GacWmsIntegration.Core.Models;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
-using System.Globalization;
 
 namespace GacWmsIntegration.Core.Services
 {
@@ -148,8 +147,33 @@ namespace GacWmsIntegration.Core.Services
                 }
 
                 // Check if customer has related records
-                bool hasRelatedRecords = await _dbContext.PurchaseOrders.AnyAsync(po => po.CustomerID == customerId) ||
-                                         await _dbContext.SalesOrders.AnyAsync(so => so.CustomerID == customerId);
+                bool hasRelatedPurchaseOrders = false;
+                bool hasRelatedSalesOrders = false;
+
+                // Check purchase orders without lambda
+                foreach (var purchaseOrder in _dbContext.PurchaseOrders)
+                {
+                    if (purchaseOrder.CustomerID == customerId)
+                    {
+                        hasRelatedPurchaseOrders = true;
+                        break;
+                    }
+                }
+
+                // Only check sales orders if no purchase orders were found
+                if (!hasRelatedPurchaseOrders)
+                {
+                    foreach (var salesOrder in _dbContext.SalesOrders)
+                    {
+                        if (salesOrder.CustomerID == customerId)
+                        {
+                            hasRelatedSalesOrders = true;
+                            break;
+                        }
+                    }
+                }
+
+                bool hasRelatedRecords = hasRelatedPurchaseOrders || hasRelatedSalesOrders;
 
                 if (hasRelatedRecords)
                 {
@@ -160,7 +184,6 @@ namespace GacWmsIntegration.Core.Services
                 // Remove from database
                 _dbContext.Customers.Remove(customer);
                 await _dbContext.SaveChangesAsync();
-
                 _logger.LogInformation("Customer deleted successfully with ID: {CustomerId}", customerId);
                 return true;
             }
@@ -175,7 +198,16 @@ namespace GacWmsIntegration.Core.Services
         {
             try
             {
-                return await _dbContext.Customers.AnyAsync(c => c.CustomerID == customerId);
+                // Get all customers and check if any has the specified ID
+                var customers = await _dbContext.Customers.ToListAsync();
+                foreach (var customer in customers)
+                {
+                    if (customer.CustomerID == customerId)
+                    {
+                        return true;
+                    }
+                }
+                return false;
             }
             catch (Exception ex)
             {
@@ -183,6 +215,7 @@ namespace GacWmsIntegration.Core.Services
                 throw;
             }
         }
+
 
         public async Task<bool> ValidateCustomerAsync(Customer customer)
         {
@@ -207,13 +240,14 @@ namespace GacWmsIntegration.Core.Services
                 }
 
                 // Check for duplicate customer ID (except for the current customer during updates)
-                var existingCustomer = await _dbContext.Customers
-                    .FirstOrDefaultAsync(c => c.CustomerID == customer.CustomerID && c != customer);
-
-                if (existingCustomer != null)
+                var customers = await _dbContext.Customers.ToListAsync();
+                foreach (var existingCustomer in customers)
                 {
-                    _logger.LogWarning("Customer validation failed: Duplicate customer ID {CustomerId}", customer.CustomerID);
-                    return false;
+                    if (existingCustomer.CustomerID == customer.CustomerID && !ReferenceEquals(existingCustomer, customer))
+                    {
+                        _logger.LogWarning("Customer validation failed: Duplicate customer ID {CustomerId}", customer.CustomerID);
+                        return false;
+                    }
                 }
 
                 return true;
@@ -224,5 +258,6 @@ namespace GacWmsIntegration.Core.Services
                 throw;
             }
         }
+
     }
 }
