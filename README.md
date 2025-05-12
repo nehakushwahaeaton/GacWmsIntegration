@@ -379,43 +379,44 @@ dotnet run
 
 
 ```
-[09:32:12 INF] Starting GAC WMS File Processor
-[09:32:13 INF] API Health Check Service starting
-[09:32:17 ERR] Error checking API health: No connection could be made because the target machine actively refused it. (localhost:7299)
-System.Net.Http.HttpRequestException: No connection could be made because the target machine actively refused it. (localhost:7299)
- ---> System.Net.Sockets.SocketException (10061): No connection could be made because the target machine actively refused it.
-   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.ThrowException(SocketError error, CancellationToken cancellationToken)
-   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.System.Threading.Tasks.Sources.IValueTaskSource.GetResult(Int16 token)
-   at System.Net.Sockets.Socket.<ConnectAsync>g__WaitForConnectWithCancellation|285_0(AwaitableSocketAsyncEventArgs saea, ValueTask connectTask, CancellationToken cancellationToken)
-   at System.Net.Http.HttpConnectionPool.ConnectToTcpHostAsync(String host, Int32 port, HttpRequestMessage initialRequest, Boolean async, CancellationToken cancellationToken)
-   --- End of inner exception stack trace ---
-   at System.Net.Http.HttpConnectionPool.ConnectToTcpHostAsync(String host, Int32 port, HttpRequestMessage initialRequest, Boolean async, CancellationToken cancellationToken)
-   at System.Net.Http.HttpConnectionPool.ConnectAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
-   at System.Net.Http.HttpConnectionPool.CreateHttp11ConnectionAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
-   at System.Net.Http.HttpConnectionPool.AddHttp11ConnectionAsync(QueueItem queueItem)
-   at System.Threading.Tasks.TaskCompletionSourceWithCancellation`1.WaitWithCancellationAsync(CancellationToken cancellationToken)
-   at System.Net.Http.HttpConnectionPool.SendWithVersionDetectionAndRetryAsync(HttpRequestMessage request, Boolean async, Boolean doRequestAuth, CancellationToken cancellationToken)
-   at System.Net.Http.RedirectHandler.SendAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
-   at Microsoft.Extensions.Http.Logging.LoggingHttpMessageHandler.<SendCoreAsync>g__Core|4_0(HttpRequestMessage request, Boolean useAsync, CancellationToken cancellationToken)
-   at Microsoft.Extensions.Http.Logging.LoggingScopeHttpMessageHandler.<SendCoreAsync>g__Core|4_0(HttpRequestMessage request, Boolean useAsync, CancellationToken cancellationToken)
-   at System.Net.Http.HttpClient.<SendAsync>g__Core|83_0(HttpRequestMessage request, HttpCompletionOption completionOption, CancellationTokenSource cts, Boolean disposeCts, CancellationTokenSource pendingRequestsCts, CancellationToken originalCancellationToken)
-   at GacWmsIntegration.FileProcessor.Services.ApiHealthCheckService.CheckApiHealth(Object state) in C:\Users\e0648555\Source\Repos\nehakushwahaeaton\GacWmsIntegration\GacWmsIntegration.FileProcessor\Services\ApiHealthCheckService.cs:line 51
-[09:32:17 INF] Retrying API health check in 5 seconds...
-[09:32:19 INF] API is now healthy. File processing can begin.
-[09:32:19 INF] Semaphore released to start file processing.
-[09:32:19 INF] File processing has been enabled
-[09:32:19 INF] Running immediate file processing for all watchers
-[09:32:19 INF] Immediate processing for watcher: CustomerFiles
-[09:32:19 INF] Starting file processing for CustomerFiles
-[09:32:19 INF] Found 0 files to process
-[09:32:19 INF] Immediate processing for watcher: ProductFiles
-[09:32:19 INF] Starting file processing for ProductFiles
-[09:32:19 INF] Found 0 files to process
-[09:32:19 INF] Immediate processing for watcher: PurchaseOrderFiles
-[09:32:19 INF] Starting file processing for PurchaseOrderFiles
-[09:32:19 INF] Found 1 files to process
-[09:32:19 INF] Processing file C:\Users\e0648555\source\repos\GacWmsIntegration\FileProcessorTesting\Import\PurchaseOrders\File001.xml of type PurchaseOrder
-[09:32:19 INF] Retrieving purchase order with ID: 6001
+[16:47:05 INF] Starting GAC WMS File Processor
+[16:47:05 INF] Scheduler Service is waiting for API to be available...
+[16:47:05 INF] API Health Check Service starting
+[16:47:10 ERR] Error checking API health: No connection could be made because the target machine actively refused it. (localhost:7299)
+[16:47:10 INF] Retrying API health check in 5 seconds... (Attempt 1/5)
+[16:47:12 INF] API is now healthy. File processing can begin.
+[16:47:12 INF] Enabling file processing
+[16:47:12 INF] Semaphore released to start file processing.
+[16:47:12 INF] File processing has been enabled
+[16:47:12 INF] === File Processing Schedule ===
+[16:47:12 INF] CustomerFiles: Next run at 2025-05-12 16:48:00 (in 47 seconds)
+[16:47:12 INF] ProductFiles: Next run at 2025-05-12 16:48:00 (in 47 seconds)
+[16:47:12 INF] PurchaseOrderFiles: Next run at 2025-05-12 16:48:00 (in 47 seconds)
+[16:47:12 INF] SalesOrderFiles: Next run at 2025-05-12 16:48:00 (in 47 seconds)
+[16:47:12 INF] ==============================
+[16:47:12 INF] ==============================
+[16:48:02 INF] Starting scheduled file processing for watcher: CustomerFiles
+[16:48:02 INF] Starting file processing for CustomerFiles
+[16:48:02 INF] Found 0 files to process
+[16:48:02 INF] Completed scheduled file processing for watcher: CustomerFiles
+[16:48:02 INF] Starting scheduled file processing for watcher: ProductFiles
+[16:48:02 INF] Starting file processing for ProductFiles
+[16:48:02 INF] Found 0 files to process
+[16:48:02 INF] Completed scheduled file processing for watcher: ProductFiles
+[16:48:02 INF] Starting scheduled file processing for watcher: PurchaseOrderFiles
+[16:48:02 INF] Starting file processing for PurchaseOrderFiles
+[16:48:02 INF] Found 0 files to process
+[16:48:02 INF] Completed scheduled file processing for watcher: PurchaseOrderFiles
+[16:48:02 INF] Starting scheduled file processing for watcher: SalesOrderFiles
+[16:48:02 INF] Starting file processing for SalesOrderFiles
+[16:48:02 INF] Found 0 files to process
+[16:48:02 INF] Completed scheduled file processing for watcher: SalesOrderFiles
+[16:48:02 INF] === File Processing Schedule ===
+[16:48:02 INF] CustomerFiles: Next run at 2025-05-12 16:49:00 (in 57 seconds)
+[16:48:02 INF] ProductFiles: Next run at 2025-05-12 16:49:00 (in 57 seconds)
+[16:48:02 INF] PurchaseOrderFiles: Next run at 2025-05-12 16:49:00 (in 57 seconds)
+[16:48:02 INF] SalesOrderFiles: Next run at 2025-05-12 16:49:00 (in 57 seconds)
+[16:48:02 INF] ==============================
 ```
 
 
