@@ -369,8 +369,49 @@ dotnet run
 <img src="https://github.com/nehakushwahaeaton/GacWmsIntegration/blob/main/Swagger_1.png" width="1000" height="900">
 <img src="https://github.com/nehakushwahaeaton/GacWmsIntegration/blob/main/Swagger_2.png" width="1000" height="900">
 
-#### 10. Swagger API look:
-<img src="https://github.com/nehakushwahaeaton/GacWmsIntegration/blob/main/Corn_console.png" width="800" height="300">
+#### 10. File processing look:
+
+
+```
+[09:32:12 INF] Starting GAC WMS File Processor
+[09:32:13 INF] API Health Check Service starting
+[09:32:17 ERR] Error checking API health: No connection could be made because the target machine actively refused it. (localhost:7299)
+System.Net.Http.HttpRequestException: No connection could be made because the target machine actively refused it. (localhost:7299)
+ ---> System.Net.Sockets.SocketException (10061): No connection could be made because the target machine actively refused it.
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.ThrowException(SocketError error, CancellationToken cancellationToken)
+   at System.Net.Sockets.Socket.AwaitableSocketAsyncEventArgs.System.Threading.Tasks.Sources.IValueTaskSource.GetResult(Int16 token)
+   at System.Net.Sockets.Socket.<ConnectAsync>g__WaitForConnectWithCancellation|285_0(AwaitableSocketAsyncEventArgs saea, ValueTask connectTask, CancellationToken cancellationToken)
+   at System.Net.Http.HttpConnectionPool.ConnectToTcpHostAsync(String host, Int32 port, HttpRequestMessage initialRequest, Boolean async, CancellationToken cancellationToken)
+   --- End of inner exception stack trace ---
+   at System.Net.Http.HttpConnectionPool.ConnectToTcpHostAsync(String host, Int32 port, HttpRequestMessage initialRequest, Boolean async, CancellationToken cancellationToken)
+   at System.Net.Http.HttpConnectionPool.ConnectAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+   at System.Net.Http.HttpConnectionPool.CreateHttp11ConnectionAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+   at System.Net.Http.HttpConnectionPool.AddHttp11ConnectionAsync(QueueItem queueItem)
+   at System.Threading.Tasks.TaskCompletionSourceWithCancellation`1.WaitWithCancellationAsync(CancellationToken cancellationToken)
+   at System.Net.Http.HttpConnectionPool.SendWithVersionDetectionAndRetryAsync(HttpRequestMessage request, Boolean async, Boolean doRequestAuth, CancellationToken cancellationToken)
+   at System.Net.Http.RedirectHandler.SendAsync(HttpRequestMessage request, Boolean async, CancellationToken cancellationToken)
+   at Microsoft.Extensions.Http.Logging.LoggingHttpMessageHandler.<SendCoreAsync>g__Core|4_0(HttpRequestMessage request, Boolean useAsync, CancellationToken cancellationToken)
+   at Microsoft.Extensions.Http.Logging.LoggingScopeHttpMessageHandler.<SendCoreAsync>g__Core|4_0(HttpRequestMessage request, Boolean useAsync, CancellationToken cancellationToken)
+   at System.Net.Http.HttpClient.<SendAsync>g__Core|83_0(HttpRequestMessage request, HttpCompletionOption completionOption, CancellationTokenSource cts, Boolean disposeCts, CancellationTokenSource pendingRequestsCts, CancellationToken originalCancellationToken)
+   at GacWmsIntegration.FileProcessor.Services.ApiHealthCheckService.CheckApiHealth(Object state) in C:\Users\e0648555\Source\Repos\nehakushwahaeaton\GacWmsIntegration\GacWmsIntegration.FileProcessor\Services\ApiHealthCheckService.cs:line 51
+[09:32:17 INF] Retrying API health check in 5 seconds...
+[09:32:19 INF] API is now healthy. File processing can begin.
+[09:32:19 INF] Semaphore released to start file processing.
+[09:32:19 INF] File processing has been enabled
+[09:32:19 INF] Running immediate file processing for all watchers
+[09:32:19 INF] Immediate processing for watcher: CustomerFiles
+[09:32:19 INF] Starting file processing for CustomerFiles
+[09:32:19 INF] Found 0 files to process
+[09:32:19 INF] Immediate processing for watcher: ProductFiles
+[09:32:19 INF] Starting file processing for ProductFiles
+[09:32:19 INF] Found 0 files to process
+[09:32:19 INF] Immediate processing for watcher: PurchaseOrderFiles
+[09:32:19 INF] Starting file processing for PurchaseOrderFiles
+[09:32:19 INF] Found 1 files to process
+[09:32:19 INF] Processing file C:\Users\e0648555\source\repos\GacWmsIntegration\FileProcessorTesting\Import\PurchaseOrders\File001.xml of type PurchaseOrder
+[09:32:19 INF] Retrieving purchase order with ID: 6001
+```
+
 
 ----------
 
