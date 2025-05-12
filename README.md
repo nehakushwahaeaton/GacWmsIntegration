@@ -49,6 +49,12 @@ The GAC WMS Integration System connects different systems to GAC's Warehouse Man
 - External applications call our .NET Web API to interact with the warehouse data.
 - The API processes these requests through the core services.
 - Data is retrieved or modified in the SQL Server database and results are returned to the client application.
+
+#### Sequence Diagarm for GMS Application:
+<img src="https://github.com/nehakushwahaeaton/GacWmsIntegration/blob/main/GACWMSSequenceDiagarm.png" width="3000" height="1500">
+
+#### Sequence Diagarm for Customer scenario GMS Application:
+<img src="https://github.com/nehakushwahaeaton/GacWmsIntegration/blob/main/CustomerFlowSequenceDiagarm.png" width="6000" height="4000">
 ----------
 ## Project Structure
 
