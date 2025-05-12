@@ -18,17 +18,7 @@ try
     {
         Console.WriteLine($"WARNING: Configuration file not found at: {appSettingsPath}");
         // Create a minimal appsettings.json file
-        File.WriteAllText(appSettingsPath, @"{
-  ""Logging"": {
-    ""LogLevel"": {
-      ""Default"": ""Information"",
-      ""Microsoft"": ""Warning""
-    }
-  },
-  ""FileProcessing"": {
-    ""FileWatchers"": []
-  }
-}");
+        File.WriteAllText(appSettingsPath, @"{  ""Logging"": {    ""LogLevel"": {      ""Default"": ""Information"",      ""Microsoft"": ""Warning""    }  },  ""FileProcessing"": {    ""FileWatchers"": []  }}");
         Console.WriteLine("Created a minimal configuration file.");
     }
 
@@ -46,7 +36,6 @@ try
                 .ReadFrom.Configuration(hostContext.Configuration)
                 .Enrich.FromLogContext()
                 .CreateLogger();
-
             services.AddLogging(builder => builder.AddSerilog(dispose: true));
 
             // Add HttpClientFactory for API health checks
@@ -69,9 +58,14 @@ try
 
             // Register file processor services
             services.Configure<FileProcessingConfig>(hostContext.Configuration.GetSection("FileProcessing"));
-            services.AddSingleton<IXmlParserService, XmlParserService>(); // Register IXmlParserService
+            services.AddSingleton<IXmlParserService, XmlParserService>();
             services.AddSingleton<FileProcessingService>();
+
+            // Register SchedulerService as a singleton so it can be injected
             services.AddSingleton<SchedulerService>();
+
+            // Register the SchedulerService as a hosted service using the same instance
+            services.AddHostedService(provider => provider.GetRequiredService<SchedulerService>());
 
             // Register the health check service
             services.AddHostedService<ApiHealthCheckService>();

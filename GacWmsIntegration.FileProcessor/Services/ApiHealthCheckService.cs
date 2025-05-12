@@ -4,7 +4,7 @@ using Microsoft.Extensions.Logging;
 
 namespace GacWmsIntegration.FileProcessor.Services
 {
-    public class ApiHealthCheckService : IHostedService
+    public class ApiHealthCheckService : IHostedService, IDisposable
     {
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly ILogger<ApiHealthCheckService> _logger;
@@ -14,6 +14,7 @@ namespace GacWmsIntegration.FileProcessor.Services
         private bool _apiIsHealthy = false;
         private const int MaxRetryAttempts = 5;
         private const int InitialRetryDelaySeconds = 5;
+        private int _currentRetryAttempts = 0;
 
         public ApiHealthCheckService(
             IHttpClientFactory httpClientFactory,
@@ -30,10 +31,8 @@ namespace GacWmsIntegration.FileProcessor.Services
         public Task StartAsync(CancellationToken cancellationToken)
         {
             _logger.LogInformation("API Health Check Service starting");
-
             // Create a timer that checks the API health every 5 seconds
             _timer = new Timer(CheckApiHealth, null, TimeSpan.Zero, TimeSpan.FromSeconds(5));
-
             return Task.CompletedTask;
         }
 
@@ -41,49 +40,47 @@ namespace GacWmsIntegration.FileProcessor.Services
         {
             var apiBaseUrl = _configuration["ApiSettings:BaseUrl"] ?? "https://localhost:7299";
             var client = _httpClientFactory.CreateClient();
-            int retryAttempts = 0;
             int delaySeconds = InitialRetryDelaySeconds;
 
-            while (retryAttempts < MaxRetryAttempts)
+            try
             {
-                try
+                var response = await client.GetAsync($"{apiBaseUrl}/health");
+                if (response.IsSuccessStatusCode)
                 {
-                    var response = await client.GetAsync($"{apiBaseUrl}/health");
-
-                    if (response.IsSuccessStatusCode)
+                    if (!_apiIsHealthy)
                     {
-                        if (!_apiIsHealthy)
-                        {
-                            _apiIsHealthy = true;
-                            _logger.LogInformation("API is now healthy. File processing can begin.");
-
-                            // Start the scheduler service
-                            await _schedulerService.StartProcessing();
-
-                            // Stop the timer as we don't need to check anymore
-                            _timer?.Change(Timeout.Infinite, 0);
-                        }
-                        return;
+                        _apiIsHealthy = true;
+                        _logger.LogInformation("API is now healthy. File processing can begin.");
+                        // Start the scheduler service
+                        _schedulerService.StartProcessing();
                     }
-                    else
-                    {
-                        _logger.LogWarning("API health check failed with status code: {StatusCode}", response.StatusCode);
-                        _apiIsHealthy = false;
-                    }
+                    _currentRetryAttempts = 0; // Reset retry counter on success
+                    return;
                 }
-                catch (Exception ex)
+                else
                 {
-                    _logger.LogError(ex, "Error checking API health: {Message}", ex.Message);
+                    _logger.LogWarning("API health check failed with status code: {StatusCode}", response.StatusCode);
                     _apiIsHealthy = false;
                 }
-
-                retryAttempts++;
-                _logger.LogInformation("Retrying API health check in {DelaySeconds} seconds...", delaySeconds);
-                await Task.Delay(TimeSpan.FromSeconds(delaySeconds));
-                delaySeconds *= 2; // Exponential backoff
             }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error checking API health: {Message}", ex.Message);
+                _apiIsHealthy = false;
 
-            _logger.LogError("API health check failed after {MaxRetryAttempts} attempts. File processing cannot begin.", MaxRetryAttempts);
+                _currentRetryAttempts++;
+                if (_currentRetryAttempts >= MaxRetryAttempts)
+                {
+                    _logger.LogError("API health check failed after {MaxRetryAttempts} attempts. Will continue checking but file processing is paused.", MaxRetryAttempts);
+                    // Don't stop checking, but log the error
+                    _currentRetryAttempts = 0; // Reset to continue checking
+                }
+                else
+                {
+                    _logger.LogInformation("Retrying API health check in {DelaySeconds} seconds... (Attempt {CurrentAttempt}/{MaxAttempts})",
+                        delaySeconds, _currentRetryAttempts, MaxRetryAttempts);
+                }
+            }
         }
 
         public Task StopAsync(CancellationToken cancellationToken)
